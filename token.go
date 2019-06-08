@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -41,7 +40,7 @@ func tokenizer(line string) []Token {
 			tokens = append(tokens, token)
 		} else {
 			token := Token{
-				Type:  "Plus",
+				Type:  "Operator",
 				Value: []byte(w),
 			}
 			tokens = append(tokens, token)
@@ -49,9 +48,4 @@ func tokenizer(line string) []Token {
 	}
 
 	return tokens
-}
-
-func main() {
-	example := "13912390123 + 1"
-	fmt.Println(tokenizer(example))
 }
