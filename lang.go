@@ -1,10 +1,12 @@
 package main
 
-import "fmt"
+import "log"
 
 func main() {
-	example := "13912390123 + 1 + 20 - 40"
+	example := "2 + 1 + 3 - 4"
 	tokenized := tokenizer(example)
 	post := postfix(tokenized)
-	fmt.Println(post)
+	log.Println(post)
+	t := tree(post)
+	inorder(&t)
 }

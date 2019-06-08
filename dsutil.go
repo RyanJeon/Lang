@@ -5,6 +5,8 @@ import "log"
 //Stack implementation
 type Stack []Token
 
+type TreeStack []Tree
+
 //Queue implementation
 type Queue []Token
 
@@ -42,4 +44,21 @@ func (q Queue) Poll() (Queue, Token) {
 
 func (q Queue) isEmpty() bool {
 	return len(q) == 0
+}
+
+//TreeStack Logics
+func (s TreeStack) Push(v Tree) TreeStack {
+	return append(s, v)
+}
+
+func (s TreeStack) Pop() (TreeStack, Tree) {
+	l := len(s)
+	if l == 0 {
+		log.Fatal("Stack is Empty")
+	}
+	return s[:l-1], s[l-1]
+}
+
+func (s TreeStack) isEmpty() bool {
+	return len(s) == 0
 }
