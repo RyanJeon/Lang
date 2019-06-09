@@ -9,7 +9,7 @@ type Tree struct {
 	Right *Tree
 }
 
-//Arithmatic Convert infix to post fix
+//Arithmatic Convert infix to post fix Shunting Yard algo
 func postfix(tokens []Token) []Token {
 	operators := make(Stack, 0)
 	operands := make(Queue, 0)

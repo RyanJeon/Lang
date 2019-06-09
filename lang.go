@@ -1,12 +1,16 @@
 package main
 
-import "log"
+import (
+	"log"
+)
 
 func main() {
-	example := "2 + 1 + 3 - 4"
+	example := "2 + 4 + 60"
 	tokenized := tokenizer(example)
 	post := postfix(tokenized)
 	log.Println(post)
 	t := tree(post)
-	inorder(&t)
+	// inorder(&t)
+	log.Println(interpret(&t))
+	asm64(&t)
 }
