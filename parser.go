@@ -48,7 +48,6 @@ func postfix(tokens []Token) []Token {
 			for operators.Top().Value[0] != 40 {
 				var operator Token
 				operators, operator = operators.Pop()
-				log.Println(operator)
 				output = output.Add(operator)
 			}
 			//This is empty paren. Discard

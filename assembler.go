@@ -24,7 +24,7 @@ func asm64(tree *Tree) {
 func treeAssemble(tree *Tree, f *os.File) {
 	//Operator means produce integer value ex) + - * ... etc
 	if (*tree).Type == "Operator" {
-		val := []byte(strconv.Itoa(arithmetic(tree)))
+		val := []byte(strconv.Itoa(Arithmetic(tree)))
 		val = reverseByteArray(val)
 		hex := hex.EncodeToString(val)
 		//Move arithmetic output to rax
@@ -33,9 +33,9 @@ func treeAssemble(tree *Tree, f *os.File) {
 	} else if (*tree).Type == "Function" {
 		if string((*tree).Value) == "print" {
 			treeAssemble(tree.Right, f)
-			f.Write([]byte("movl	$0x2000004, %eax\n"))
-			f.Write([]byte("movl	$1, %edi\n"))
-			f.Write([]byte("movl	%ecx, print(%rip)\n"))
+			f.Write([]byte("movq	$0x2000004, %rax\n"))
+			f.Write([]byte("movq	$1, %rdi\n"))
+			f.Write([]byte("movq	%rcx, print(%rip)\n"))
 			f.Write([]byte("leaq	print(%rip), %rsi\n"))
 			f.Write([]byte("movq	$100, %rdx\n"))
 			f.Write([]byte("syscall\n"))
