@@ -76,18 +76,28 @@ func postfix(tokens []Token) []Token {
 	return postfix
 }
 
-//Postfix to Tree
+//Postfix to Abstract Syntax Tree
 func tree(post []Token) Tree {
 	stack := make(TreeStack, 0)
 
 	for _, t := range post {
-		if t.Type != "Operator" {
+		if t.Type == "Int" {
 			stack = stack.Push(Tree{
 				t.Type,
 				t.Value,
 				nil,
 				nil,
 			})
+		} else if t.Type == "Function" {
+			var t1 Tree
+			stack, t1 = stack.Pop()
+			root := Tree{
+				t.Type,
+				t.Value,
+				nil,
+				&t1,
+			}
+			stack = stack.Push(root)
 		} else {
 			var t1 Tree
 			var t2 Tree
@@ -108,7 +118,7 @@ func tree(post []Token) Tree {
 	return t
 }
 
-//In Order Traversal
+//In Order Traversal for logging tree content
 func inorder(tree *Tree) {
 	if tree != nil {
 		inorder(tree.Left)

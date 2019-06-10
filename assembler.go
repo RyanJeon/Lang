@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"os"
 	"strconv"
@@ -11,29 +12,33 @@ func asm64(tree *Tree) {
 
 	//Set up assembly
 	f.Write([]byte(".data\n"))
+	f.Write([]byte("print: .asciz \"\" \n"))
 	f.Write([]byte(".globl execute\n")) //make main visible to linker
 	f.Write([]byte(".text\n"))
 	f.Write([]byte("execute:\n")) //main code segment
-	treeAssemble(tree, f, "")
+	treeAssemble(tree, f)
 	f.Write([]byte("retq\n")) //end the process
 
 }
 
-func treeAssemble(tree *Tree, f *os.File, prevType string) {
-	fmt.Println((*tree).Type)
-	fmt.Println(prevType)
-	if (*tree).Type != "Operator" {
-		s := ""
-		//Second int in arithmetic exp
-		if prevType == "rbx" {
-			s = fmt.Sprintf("movq	$%s, %%rbx\n", (*tree).Value)
-		} else {
-			s = fmt.Sprintf("movq	$%s, %%rax\n", (*tree).Value)
+func treeAssemble(tree *Tree, f *os.File) {
+	//Operator means produce integer value ex) + - * ... etc
+	if (*tree).Type == "Operator" {
+		val := []byte(strconv.Itoa(arithmetic(tree)))
+		val = reverseByteArray(val)
+		hex := hex.EncodeToString(val)
+		//Move arithmetic output to rax
+		s := fmt.Sprintf("movq	$0x%s, %%rcx\n", hex)
+		f.Write([]byte(s))
+	} else if (*tree).Type == "Function" {
+		if string((*tree).Value) == "print" {
+			treeAssemble(tree.Right, f)
+			f.Write([]byte("movl	$0x2000004, %eax\n"))
+			f.Write([]byte("movl	$1, %edi\n"))
+			f.Write([]byte("movl	%ecx, print(%rip)\n"))
+			f.Write([]byte("leaq	print(%rip), %rsi\n"))
+			f.Write([]byte("movq	$100, %rdx\n"))
+			f.Write([]byte("syscall\n"))
 		}
-		f.Write([]byte(s))
-	} else { //Operator means produce integer value ex) + - * ... etc
-		val := strconv.Itoa(interpret(tree))
-		s := fmt.Sprintf("movq	$%s, %%rax\n", []byte(val))
-		f.Write([]byte(s))
 	}
 }

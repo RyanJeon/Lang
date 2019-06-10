@@ -79,3 +79,13 @@ func (s TreeStack) Pop() (TreeStack, Tree) {
 func (s TreeStack) isEmpty() bool {
 	return len(s) == 0
 }
+
+func reverseByteArray(byteArray []byte) []byte {
+	for i := 0; i < len(byteArray)/2; i++ {
+		temp := byteArray[i]
+		byteArray[i] = byteArray[len(byteArray)-1-i]
+		byteArray[len(byteArray)-1-i] = temp
+	}
+
+	return byteArray
+}
