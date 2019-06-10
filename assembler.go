@@ -3,14 +3,17 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 )
 
 func asm64(tree *Tree) {
-	f, _ := os.Create("compiled.asm")
+	f, _ := os.Create("test.asm")
 
 	//Set up assembly
-	f.Write([]byte(".globl _main\n")) //make main visible to linker
-	f.Write([]byte("_main:\n"))       //main code segment
+	f.Write([]byte(".data\n"))
+	f.Write([]byte(".globl execute\n")) //make main visible to linker
+	f.Write([]byte(".text\n"))
+	f.Write([]byte("execute:\n")) //main code segment
 	treeAssemble(tree, f, "")
 	f.Write([]byte("retq\n")) //end the process
 
@@ -28,19 +31,9 @@ func treeAssemble(tree *Tree, f *os.File, prevType string) {
 			s = fmt.Sprintf("movq	$%s, %%rax\n", (*tree).Value)
 		}
 		f.Write([]byte(s))
-	} else {
-		//Plus
-		if (*tree).Value[0] == 43 {
-			treeAssemble(tree.Left, f, "rax")
-			treeAssemble(tree.Right, f, "rbx")
-			f.Write([]byte("addq	%rbx, %rax\n"))
-		} else if (*tree).Value[0] == 45 {
-			treeAssemble(tree.Left, f, "rax")
-			treeAssemble(tree.Right, f, "rbx")
-			f.Write([]byte("subq	%rbx, %rax\n"))
-		} else {
-
-		}
-
+	} else { //Operator means produce integer value ex) + - * ... etc
+		val := strconv.Itoa(interpret(tree))
+		s := fmt.Sprintf("movq	$%s, %%rax\n", []byte(val))
+		f.Write([]byte(s))
 	}
 }

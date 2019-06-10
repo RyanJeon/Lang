@@ -1,5 +1,7 @@
 package main
 
+import "log"
+
 //Convert int ascii value to int
 func BytesToInt(bytes []byte) int {
 	//0 is 0x30
@@ -12,16 +14,24 @@ func BytesToInt(bytes []byte) int {
 }
 
 func interpret(tree *Tree) int {
+	log.Println(*tree)
 	if (*tree).Type != "Operator" {
 		return BytesToInt((*tree).Value)
+	}
+	val := (*tree).Value[0]
+	//Plus
+	if val == 43 {
+		return interpret(tree.Left) + interpret(tree.Right)
+		//Minus
+	} else if val == 45 {
+		return interpret(tree.Left) - interpret(tree.Right)
+		//Mult
+	} else if val == 42 {
+		return interpret(tree.Left) * interpret(tree.Right)
+		//Div
+	} else if val == 47 {
+		return interpret(tree.Left) / interpret(tree.Right)
 	} else {
-		//Plus
-		if (*tree).Value[0] == 43 {
-			return interpret(tree.Left) + interpret(tree.Right)
-		} else if (*tree).Value[0] == 45 {
-			return interpret(tree.Left) - interpret(tree.Right)
-		} else {
-			return 0
-		}
+		return 0
 	}
 }

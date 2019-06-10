@@ -2,6 +2,7 @@ package main
 
 import "log"
 
+//Tree node
 type Tree struct {
 	Type  string
 	Value []byte
@@ -12,34 +13,63 @@ type Tree struct {
 //Arithmatic Convert infix to post fix Shunting Yard algo
 func postfix(tokens []Token) []Token {
 	operators := make(Stack, 0)
-	operands := make(Queue, 0)
+	output := make(Queue, 0)
 	postfix := []Token{}
 
 	for _, t := range tokens {
 		if t.Type == "Int" {
-			operands = operands.Add(t)
+			output = output.Add(t)
 		}
-		if t.Type == "Operator" {
+		if t.Type == "Function" {
+			operators = operators.Push(t)
+		}
+		if t.Type == "Operator" && t.Value[0] != 40 && t.Value[0] != 41 {
 			//While the operator stack is not empty
-			for !operators.isEmpty() {
+			for !operators.isEmpty() &&
+				(operators.Top().Type == "Function" ||
+					(operators.Top().Type == "Operator" &&
+						(operators.Top().Value[0] == 42 ||
+							operators.Top().Value[0] == 47)) &&
+						operators.Top().Value[0] != 40) {
 				var operator Token
 				operators, operator = operators.Pop()
-				operands = operands.Add(operator)
+				output = output.Add(operator)
 			}
 			operators = operators.Push(t)
 		}
+
+		//If left paren
+		if t.Value[0] == 40 {
+			operators = operators.Push(t)
+		}
+		//If right paren
+		if t.Value[0] == 41 {
+			//Add to all terms in the parent
+			for operators.Top().Value[0] != 40 {
+				var operator Token
+				operators, operator = operators.Pop()
+				log.Println(operator)
+				output = output.Add(operator)
+			}
+			//This is empty paren. Discard
+			if !operators.isEmpty() && operators.Top().Value[0] == 40 {
+				operators, _ = operators.Pop()
+			}
+
+		}
+
 	}
 
 	//While the operator stack is not empty
 	for !operators.isEmpty() {
 		var operator Token
 		operators, operator = operators.Pop()
-		operands = operands.Add(operator)
+		output = output.Add(operator)
 	}
 
-	for !operands.isEmpty() {
+	for !output.isEmpty() {
 		var term Token
-		operands, term = operands.Poll()
+		output, term = output.Poll()
 		postfix = append(postfix, term)
 	}
 
