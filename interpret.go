@@ -16,7 +16,7 @@ func BytesToInt(bytes []byte) int {
 	return res
 }
 
-//NOTE: Breaks on print ( ( 20 + 30 ) * 10 - 5 * 4 - 5 )
+//NOTE: Fix Negatives
 //Arithmetic : given Arithmetic tree, calculates integer value
 func Arithmetic(tree *Tree, f *os.File) {
 	val := (*tree).Value[0]
@@ -40,10 +40,20 @@ func Arithmetic(tree *Tree, f *os.File) {
 		f.Write([]byte("movq	%rcx, %rax\n"))
 		//Mult
 	} else if val == 42 {
-
+		Arithmetic(tree.Left, f)
+		f.Write([]byte("pushq	%rax\n"))
+		Arithmetic(tree.Right, f)
+		f.Write([]byte("popq	%rcx\n"))
+		f.Write([]byte("mulq	%rcx\n"))
 		//Div
 	} else if val == 47 {
-
+		Arithmetic(tree.Left, f)
+		f.Write([]byte("pushq	%rax\n"))
+		Arithmetic(tree.Right, f)
+		f.Write([]byte("movq	%rax, %rcx\n"))
+		f.Write([]byte("popq	%rax\n"))
+		f.Write([]byte("xor		%rdx, %rdx\n"))
+		f.Write([]byte("divq	%rcx\n"))
 	} else {
 
 	}
