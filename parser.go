@@ -10,6 +10,17 @@ type Tree struct {
 	Right *Tree
 }
 
+func precedent(operator string) int {
+	if operator == "*" || operator == "/" {
+		return 3
+	} else if operator == "+" || operator == "-" {
+		return 2
+	} else {
+		log.Fatalf("Error: precedent function takes operator string input: %s", operator)
+	}
+	return 0
+}
+
 //Arithmatic Convert infix to post fix Shunting Yard algo
 func postfix(tokens []Token) []Token {
 	operators := make(Stack, 0)
@@ -28,9 +39,8 @@ func postfix(tokens []Token) []Token {
 			for !operators.isEmpty() &&
 				(operators.Top().Type == "Function" ||
 					(operators.Top().Type == "Operator" &&
-						(operators.Top().Value[0] == 42 ||
-							operators.Top().Value[0] == 47)) &&
-						operators.Top().Value[0] != 40) {
+						operators.Top().Value[0] != 40 &&
+						(precedent(string(operators.Top().Value)) >= precedent(string(t.Value))))) {
 				var operator Token
 				operators, operator = operators.Pop()
 				output = output.Add(operator)

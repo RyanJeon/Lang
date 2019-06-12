@@ -1,10 +1,7 @@
 package main
 
 import (
-	"encoding/hex"
-	"fmt"
 	"os"
-	"strconv"
 )
 
 func asm64(tree *Tree) {
@@ -24,15 +21,16 @@ func asm64(tree *Tree) {
 func treeAssemble(tree *Tree, f *os.File) {
 	//Operator means produce integer value ex) + - * ... etc
 	if (*tree).Type == "Operator" {
-		val := []byte(strconv.Itoa(Arithmetic(tree)))
-		val = reverseByteArray(val)
-		hex := hex.EncodeToString(val)
+		// val := []byte(strconv.Itoa(Arithmetic(tree)))
+		// val = reverseByteArray(val)
+		// hex := hex.EncodeToString(val)
 		//Move arithmetic output to rax
-		s := fmt.Sprintf("movq	$0x%s, %%rcx\n", hex)
-		f.Write([]byte(s))
+		// s := fmt.Sprintf("movq	$0x%s, %%rcx\n", hex)
+		Arithmetic(tree, f)
 	} else if (*tree).Type == "Function" {
 		if string((*tree).Value) == "print" {
 			treeAssemble(tree.Right, f)
+			IntToHex(f)
 			f.Write([]byte("movq	$0x2000004, %rax\n"))
 			f.Write([]byte("movq	$1, %rdi\n"))
 			f.Write([]byte("movq	%rcx, print(%rip)\n"))

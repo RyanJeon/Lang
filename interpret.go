@@ -1,5 +1,10 @@
 package main
 
+import (
+	"fmt"
+	"os"
+)
+
 //BytesToInt : Convert int ascii value to int
 func BytesToInt(bytes []byte) int {
 	//0 is 0x30
@@ -11,25 +16,35 @@ func BytesToInt(bytes []byte) int {
 	return res
 }
 
+//NOTE: Breaks on print ( ( 20 + 30 ) * 10 - 5 * 4 - 5 )
 //Arithmetic : given Arithmetic tree, calculates integer value
-func Arithmetic(tree *Tree) int {
-	if (*tree).Type != "Operator" {
-		return BytesToInt((*tree).Value)
-	}
+func Arithmetic(tree *Tree, f *os.File) {
 	val := (*tree).Value[0]
-	//Plus
-	if val == 43 {
-		return Arithmetic(tree.Left) + Arithmetic(tree.Right)
+	if (*tree).Type != "Operator" {
+		s := fmt.Sprintf("movq	$%s, %%rax\n", string((*tree).Value))
+		f.Write([]byte(s))
+		//Plus
+	} else if val == 43 {
+		Arithmetic(tree.Left, f)
+		f.Write([]byte("pushq	%rax\n"))
+		Arithmetic(tree.Right, f)
+		f.Write([]byte("popq	%rcx\n"))
+		f.Write([]byte("addq	%rcx, %rax\n"))
 		//Minus
 	} else if val == 45 {
-		return Arithmetic(tree.Left) - Arithmetic(tree.Right)
+		Arithmetic(tree.Left, f)
+		f.Write([]byte("pushq	%rax\n"))
+		Arithmetic(tree.Right, f)
+		f.Write([]byte("popq	%rcx\n"))
+		f.Write([]byte("subq	%rax, %rcx\n"))
+		f.Write([]byte("movq	%rcx, %rax\n"))
 		//Mult
 	} else if val == 42 {
-		return Arithmetic(tree.Left) * Arithmetic(tree.Right)
+
 		//Div
 	} else if val == 47 {
-		return Arithmetic(tree.Left) / Arithmetic(tree.Right)
+
 	} else {
-		return 0
+
 	}
 }
