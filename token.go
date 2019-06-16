@@ -46,14 +46,28 @@ func isOperator(word string) bool {
 	return true
 }
 
+func isDeclaration(word string) bool {
+	return word == "Int"
+}
+
+func isAssignment(word string) bool {
+	return word == "="
+}
+
 func tokenizer(line string) []Token {
 	words := strings.Fields(line)
 	tokens := []Token{}
 
-	for _, w := range words {
+	for i, w := range words {
 		if isInt(w) {
 			token := Token{
 				Type:  "Int",
+				Value: []byte(w),
+			}
+			tokens = append(tokens, token)
+		} else if i > 0 && tokens[i-1].Type == "Declaration" {
+			token := Token{
+				Type:  "Variable",
 				Value: []byte(w),
 			}
 			tokens = append(tokens, token)
@@ -63,13 +77,36 @@ func tokenizer(line string) []Token {
 				Value: []byte(w),
 			}
 			tokens = append(tokens, token)
-		} else {
+		} else if isDeclaration(w) {
 			token := Token{
-				Type:  "Function",
+				Type:  "Declaration",
 				Value: []byte(w),
 			}
 			tokens = append(tokens, token)
+		} else if isAssignment(w) {
+			token := Token{
+				Type:  "Assignment",
+				Value: []byte(w),
+			}
+			tokens = append(tokens, token)
+		} else {
+			_, ok := LocalVariable[w]
+			//w is a local variable
+			if ok {
+				token := Token{
+					Type:  "Variable",
+					Value: []byte(w),
+				}
+				tokens = append(tokens, token)
+			} else {
+				token := Token{
+					Type:  "Function",
+					Value: []byte(w),
+				}
+				tokens = append(tokens, token)
+			}
 		}
+
 	}
 
 	return tokens

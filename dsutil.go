@@ -89,3 +89,7 @@ func reverseByteArray(byteArray []byte) []byte {
 
 	return byteArray
 }
+
+//TokenPrettyLog : logs token with its values in string
+func TokenPrettyLog(tokenArray []Token) {
+}

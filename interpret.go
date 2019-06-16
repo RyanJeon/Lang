@@ -2,8 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 )
+
+//LocalVariable : map of local variable relative stack index
+var LocalVariable map[string]int
+
+var stackindex int
 
 //BytesToInt : Convert int ascii value to int
 func BytesToInt(bytes []byte) int {
@@ -21,40 +27,80 @@ func BytesToInt(bytes []byte) int {
 func Arithmetic(tree *Tree, f *os.File) {
 	val := (*tree).Value[0]
 	if (*tree).Type != "Operator" {
-		s := fmt.Sprintf("movq	$%s, %%rax\n", string((*tree).Value))
-		f.Write([]byte(s))
+		if (*tree).Type == "Variable" {
+			//Look up stack index for the variable
+			offset := LocalVariable[string((*tree).Value)]
+			index := (len(LocalVariable)+1)*8 - offset
+			log.Printf("Stack Index for: %s", string((*tree).Value))
+			log.Println(index)
+			code := fmt.Sprintf("movq	%d(%%rbp), %%rax\n", index)
+			f.WriteString(code)
+		} else {
+			s := fmt.Sprintf("movq	$%s, %%rax\n", string((*tree).Value))
+			f.WriteString(s)
+		}
 		//Plus
 	} else if val == 43 {
 		Arithmetic(tree.Left, f)
-		f.Write([]byte("pushq	%rax\n"))
+		f.WriteString("pushq	%rax\n")
 		Arithmetic(tree.Right, f)
-		f.Write([]byte("popq	%rcx\n"))
-		f.Write([]byte("addq	%rcx, %rax\n"))
+		f.WriteString("popq	%rcx\n")
+		f.WriteString("addq	%rcx, %rax\n")
 		//Minus
 	} else if val == 45 {
 		Arithmetic(tree.Left, f)
-		f.Write([]byte("pushq	%rax\n"))
+		f.WriteString("pushq	%rax\n")
 		Arithmetic(tree.Right, f)
-		f.Write([]byte("popq	%rcx\n"))
-		f.Write([]byte("subq	%rax, %rcx\n"))
-		f.Write([]byte("movq	%rcx, %rax\n"))
+		f.WriteString("popq	%rcx\n")
+		f.WriteString("subq	%rax, %rcx\n")
+		f.WriteString("movq	%rcx, %rax\n")
 		//Mult
 	} else if val == 42 {
 		Arithmetic(tree.Left, f)
-		f.Write([]byte("pushq	%rax\n"))
+		f.WriteString("pushq	%rax\n")
 		Arithmetic(tree.Right, f)
-		f.Write([]byte("popq	%rcx\n"))
-		f.Write([]byte("mulq	%rcx\n"))
+		f.WriteString("popq	%rcx\n")
+		f.WriteString("mulq	%rcx\n")
 		//Div
 	} else if val == 47 {
 		Arithmetic(tree.Left, f)
-		f.Write([]byte("pushq	%rax\n"))
+		f.WriteString("pushq	%rax\n")
 		Arithmetic(tree.Right, f)
-		f.Write([]byte("movq	%rax, %rcx\n"))
-		f.Write([]byte("popq	%rax\n"))
-		f.Write([]byte("xor		%rdx, %rdx\n"))
-		f.Write([]byte("divq	%rcx\n"))
+		f.WriteString("movq	%rax, %rcx\n")
+		f.WriteString("popq	%rax\n")
+		f.WriteString("xor		%rdx, %rdx\n")
+		f.WriteString("divq	%rcx\n")
 	} else {
 
 	}
+}
+
+//Declaration : traverse tree for variable declaration
+func Declaration(tree *Tree, f *os.File, vartype string) {
+	termtype := (*tree).Type
+	switch termtype {
+	case "Declaration":
+		Declaration(tree.Right, f, vartype)
+		break
+	case "Assignment":
+		Declaration(tree.Left, f, vartype)
+		Declaration(tree.Right, f, vartype)
+
+		f.WriteString("pushq	%rbp\n")
+		f.WriteString("movq	%rsp, %rbp\n")
+		break
+	case "Variable":
+		LocalVariable[string((*tree).Value)] = stackindex
+		stackindex = stackindex + 8
+		break
+	case "Int":
+		Arithmetic(tree, f)
+		//move rbp to top of the stack again
+		if len(LocalVariable) > 1 {
+			//pop
+			f.WriteString("popq	%rbp\n")
+		}
+		f.WriteString("pushq	%rax\n")
+	}
+
 }

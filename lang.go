@@ -10,6 +10,12 @@ func main() {
 	// example := "print ( ( 20 + 30 ) * 10 + ( 2 - 65 * 10 ) * 32 )"
 	args := os.Args
 	file, err := os.Open(args[1])
+
+	//Initialize Local Variable map
+	LocalVariable = make(map[string]int)
+	//Initialize stack index for local variables
+	stackindex = 8
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -26,12 +32,12 @@ func main() {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		code := scanner.Text()
-		log.Println(code)
 		tokenized := tokenizer(code)
 		post := postfix(tokenized)
 		t := tree(post)
 		asm64(&t, f)
 	}
 
-	f.Write([]byte("retq\n")) //end the process
+	f.Write([]byte("movq	$42, %rbx\n")) //end the process
+	f.Write([]byte("syscall\n"))
 }

@@ -10,15 +10,24 @@ func asm64(tree *Tree, f *os.File) {
 }
 
 func treeAssemble(tree *Tree, f *os.File) {
+
+	switch (*tree).Type {
 	//Operator means produce integer value ex) + - * ... etc
-	if (*tree).Type == "Operator" {
-		//Do arithmetic if operator is seen
+	case "Operator":
 		Arithmetic(tree, f)
-	} else if (*tree).Type == "Function" {
+		break
+	case "Int":
+		Arithmetic(tree, f)
+		break
+	case "Declaration":
+		Declaration(tree, f, string((*tree).Value))
+		break
+	case "Function":
 		if string((*tree).Value) == "print" {
 			treeAssemble(tree.Right, f)
-			f.WriteString("callq	inttohex\n")
+			f.WriteString("callq	inttostring\n")
 			f.WriteString("callq	printout\n")
 		}
+		break
 	}
 }
