@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -28,7 +29,13 @@ func Arithmetic(tree *Tree, f *os.File) {
 	if (*tree).Type != "Operator" {
 		if (*tree).Type == "Variable" {
 			//Look up stack index for the variable
-			offset := LocalVariable[string((*tree).Value)]
+			offset, exist := LocalVariable[string((*tree).Value)]
+
+			if !exist {
+				err := fmt.Sprintf("Variable %s is not declared!", (*tree).Value)
+				log.Fatal(err)
+			}
+
 			index := (len(LocalVariable)+1)*8 - offset
 			code := fmt.Sprintf("movq	%d(%%rbp), %%rax\n", index)
 			f.WriteString(code)
@@ -98,6 +105,16 @@ func Declaration(tree *Tree, f *os.File, vartype string) {
 			f.WriteString("popq	%rbp\n")
 		}
 		f.WriteString("pushq	%rax\n")
+		break
+	case "Operator":
+		Arithmetic(tree, f)
+		//move rbp to top of the stack again
+		if len(LocalVariable) > 1 {
+			//pop
+			f.WriteString("popq	%rbp\n")
+		}
+		f.WriteString("pushq	%rax\n")
+		break
 	}
 
 }
