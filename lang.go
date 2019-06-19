@@ -38,6 +38,13 @@ func main() {
 		asm64(&t, f)
 	}
 
-	f.Write([]byte("movq	$42, %rbx\n")) //end the process
-	f.Write([]byte("syscall\n"))
+	f.WriteString("movq	%rbp, %rsp\n")
+	f.WriteString("popq	%rbp\n") //restore rbp
+
+	for i := 0; i < len(LocalVariable); i++ {
+		//pop remaining local variable
+		f.WriteString("popq	%rcx\n")
+	}
+
+	f.Write([]byte("retq\n"))
 }

@@ -1,4 +1,3 @@
 Int a = 2
 Int b = 1237
-print ( 1 + a )
-print ( 1236 + b )
+print ( 1236 + b + a )

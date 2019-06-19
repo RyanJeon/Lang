@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 )
 
@@ -31,8 +30,6 @@ func Arithmetic(tree *Tree, f *os.File) {
 			//Look up stack index for the variable
 			offset := LocalVariable[string((*tree).Value)]
 			index := (len(LocalVariable)+1)*8 - offset
-			log.Printf("Stack Index for: %s", string((*tree).Value))
-			log.Println(index)
 			code := fmt.Sprintf("movq	%d(%%rbp), %%rax\n", index)
 			f.WriteString(code)
 		} else {
