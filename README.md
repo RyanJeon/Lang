@@ -2,7 +2,7 @@
 
 ##### Warning: RyanLang is in a very crude stage. Also I am also accepting a good name for this language.
 
-#Info
+# Info
 
 RyanLang is a programming langauge that supports both Korean and English keywords to allow flexibility in terms of spoken language when writing code. 
 
