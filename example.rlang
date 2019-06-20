@@ -1,3 +1,5 @@
 Int b = 12 * 1 - 10
 Int a = 32 * 10
-print ( b * a )
+출력 ( b * a )
+출력 ( a )
+print ( b )

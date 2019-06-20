@@ -19,11 +19,15 @@ func treeAssemble(tree *Tree, f *os.File) {
 	case "Int":
 		Arithmetic(tree, f)
 		break
+	case "Variable":
+		//Should change to allow dif variable types
+		Arithmetic(tree, f)
+		break
 	case "Declaration":
 		Declaration(tree, f, string((*tree).Value))
 		break
 	case "Function":
-		if string((*tree).Value) == "print" {
+		if string((*tree).Value) == "출력" || string((*tree).Value) == "print" {
 			treeAssemble(tree.Right, f)
 			f.WriteString("callq	inttostring\n")
 			f.WriteString("callq	printout\n")
