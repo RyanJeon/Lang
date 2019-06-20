@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 )
 
@@ -32,19 +33,27 @@ func treeAssemble(tree *Tree, f *os.File) {
 			treeAssemble(tree.Right, f)
 			f.WriteString("callq	inttostring\n")
 			f.WriteString("callq	printout\n")
+		} else {
+			code := fmt.Sprintf("callq	%s\n", string((*tree).Value))
+			f.WriteString(code)
 		}
 		break
 	//End of func but need to be scalable
 	case "CurlyLeft":
-		f.WriteString("movq	%rbp, %rsp\n")
-		f.WriteString("popq	%rbp\n") //restore rbp
-		for i := 0; i < (stackindex/8)-1; i++ {
-			//pop remaining local variable
-			f.WriteString("popq	%rcx\n")
+
+		//If there was local variable
+		if stackindex > 8 {
+
+			f.WriteString("movq	%rbp, %rsp\n")
+			f.WriteString("popq	%rbp\n") //restore rbp
+			for i := 0; i < (stackindex/8)-1; i++ {
+				//pop remaining local variable
+				f.WriteString("popq	%rcx\n")
+			}
+			//Reset local variable map
+			LocalVariable = make(map[string]int)
+			stackindex = 8
 		}
 		f.WriteString("retq\n")
-		//Reset local variable map
-		LocalVariable = make(map[string]int)
-		stackindex = 8
 	}
 }

@@ -31,6 +31,9 @@ func main() {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		code := scanner.Text()
+		if len(code) == 0 {
+			continue
+		}
 		tokenized := tokenizer(code)
 		post := postfix(tokenized)
 		t := tree(post)

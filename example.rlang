@@ -1,4 +1,9 @@
+Int foo ( ) {
+    Int a = 2
+    Int b = 6
+    print ( a * b )
+}
 Int execute ( ) {
-    Int a = 10
-    print ( a + 1 )
+    foo ( )
+    print ( 10 )
 }

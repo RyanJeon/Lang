@@ -36,3 +36,8 @@ $ ./example.rlang.out
 ### Need to be done this week
 - Functions should support parameters
 - Korean support for delclaration
+
+### Some Problems
+- What about a conflict between variable and keywords? For example, someone who wants to write in Korean decides to declare a variable in English, does that person have to be aware of English keywords as well?:
+    - In the future, the user will specify the code language at compile time
+    to avoid such conflict.

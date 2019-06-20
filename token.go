@@ -58,8 +58,8 @@ func isAssignment(word string) bool {
 func tokenizer(line string) []Token {
 	words := strings.Fields(line)
 	tokens := []Token{}
-
 	for i, w := range words {
+		log.Println(w)
 		if isInt(w) {
 			token := Token{
 				Type:  "Int",
@@ -67,6 +67,12 @@ func tokenizer(line string) []Token {
 			}
 			tokens = append(tokens, token)
 			//Check if declaration was made. If it did, means it's a variable
+		} else if w == "," {
+			token := Token{
+				Type:  "Comma",
+				Value: []byte(w),
+			}
+			tokens = append(tokens, token)
 		} else if i > 0 && tokens[i-1].Type == "Declaration" {
 			token := Token{
 				Type:  "Variable",
