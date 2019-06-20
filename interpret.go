@@ -81,9 +81,19 @@ func Arithmetic(tree *Tree, f *os.File) {
 
 //Declaration : traverse tree for variable declaration
 func Declaration(tree *Tree, f *os.File, vartype string) {
+	if tree == nil {
+		return
+	}
 	termtype := (*tree).Type
+	log.Println(termtype)
 	switch termtype {
 	case "Declaration":
+		Declaration(tree.Right, f, vartype)
+		break
+	//Should check if it's function call or declaration
+	case "Function":
+		code := fmt.Sprintf("%s:\n", string((*tree).Value))
+		f.WriteString(code)
 		Declaration(tree.Right, f, vartype)
 		break
 	case "Assignment":

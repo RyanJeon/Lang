@@ -32,7 +32,8 @@ func postfix(tokens []Token) []Token {
 			output = output.Add(t)
 		} else if t.Type == "Function" ||
 			t.Type == "Assignment" ||
-			t.Type == "Declaration" {
+			t.Type == "Declaration" ||
+			t.Type == "CurlyLeft" {
 			operators = operators.Push(t)
 		} else if t.Type == "Operator" && t.Value[0] != 40 && t.Value[0] != 41 {
 			//While the operator stack is not empty
@@ -82,6 +83,7 @@ func postfix(tokens []Token) []Token {
 		postfix = append(postfix, term)
 	}
 
+	log.Println(postfix)
 	return postfix
 }
 
@@ -90,7 +92,7 @@ func tree(post []Token) Tree {
 	stack := make(TreeStack, 0)
 
 	for _, t := range post {
-		if t.Type == "Int" || t.Type == "Variable" {
+		if stack.isEmpty() || t.Type == "Int" || t.Type == "Variable" {
 			stack = stack.Push(Tree{
 				t.Type,
 				t.Value,
@@ -125,6 +127,8 @@ func tree(post []Token) Tree {
 
 	//Root of the tree
 	stack, t := stack.Pop()
+
+	inorder(&t)
 	return t
 }
 

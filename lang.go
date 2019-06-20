@@ -27,7 +27,6 @@ func main() {
 	f.Write([]byte(".text\n"))
 	IntToHex(f)
 	PrintAsm(f)
-	f.Write([]byte("execute:\n")) //main code segment
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -38,13 +37,4 @@ func main() {
 		asm64(&t, f)
 	}
 
-	f.WriteString("movq	%rbp, %rsp\n")
-	f.WriteString("popq	%rbp\n") //restore rbp
-
-	for i := 0; i < len(LocalVariable); i++ {
-		//pop remaining local variable
-		f.WriteString("popq	%rcx\n")
-	}
-
-	f.Write([]byte("retq\n"))
 }

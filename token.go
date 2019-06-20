@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"strings"
 )
 
@@ -65,6 +66,7 @@ func tokenizer(line string) []Token {
 				Value: []byte(w),
 			}
 			tokens = append(tokens, token)
+			//Check if declaration was made. If it did, means it's a variable
 		} else if i > 0 && tokens[i-1].Type == "Declaration" {
 			token := Token{
 				Type:  "Variable",
@@ -72,8 +74,24 @@ func tokenizer(line string) []Token {
 			}
 			tokens = append(tokens, token)
 		} else if isOperator(w) {
+			//Check if this was a function call or func declaration
+			if i > 0 && w == "(" && tokens[i-1].Type == "Variable" {
+				tokens[i-1].Type = "Function"
+			}
 			token := Token{
 				Type:  "Operator",
+				Value: []byte(w),
+			}
+			tokens = append(tokens, token)
+		} else if w == "{" {
+			token := Token{
+				Type:  "CurlyRight",
+				Value: []byte(w),
+			}
+			tokens = append(tokens, token)
+		} else if w == "}" {
+			token := Token{
+				Type:  "CurlyLeft",
 				Value: []byte(w),
 			}
 			tokens = append(tokens, token)
@@ -92,6 +110,8 @@ func tokenizer(line string) []Token {
 		} else {
 			_, ok := LocalVariable[w]
 			//w is a local variable
+			//Note: Need to implement undeclared variable error
+			log.Println(LocalVariable)
 			if ok {
 				token := Token{
 					Type:  "Variable",
