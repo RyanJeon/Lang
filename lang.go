@@ -16,6 +16,8 @@ func main() {
 	//Initialize stack index for local variables
 	stackindex = 8
 
+	GrammarInit()
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,9 +37,8 @@ func main() {
 			continue
 		}
 		tokenized := tokenizer(code)
-		post := postfix(tokenized)
-		t := tree(post)
-		asm64(&t, f)
+		class := ClassifyStatement(tokenized)
+		Translate(class, tokenized, f)
 	}
 
 }

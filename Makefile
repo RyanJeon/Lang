@@ -10,4 +10,4 @@ compile:
 	$(GCC) test.asm -o test.out -e execute
 
 build:
-	$(GOBUILD) -o rlang assembler.go dsutil.go interpret.go lang.go parser.go token.go asmutil.go
+	$(GOBUILD) -o rlang assembler.go dsutil.go interpret.go lang.go parser.go token.go asmutil.go grammar.go

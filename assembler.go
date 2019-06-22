@@ -11,7 +11,6 @@ func asm64(tree *Tree, f *os.File) {
 }
 
 func treeAssemble(tree *Tree, f *os.File) {
-
 	switch (*tree).Type {
 	//Operator means produce integer value ex) + - * ... etc
 	case "Operator":
@@ -39,8 +38,7 @@ func treeAssemble(tree *Tree, f *os.File) {
 		}
 		break
 	//End of func but need to be scalable
-	case "CurlyLeft":
-
+	case "End":
 		//If there was local variable
 		if stackindex > 8 {
 

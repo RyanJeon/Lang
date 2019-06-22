@@ -1,6 +1,8 @@
 package main
 
-import "log"
+import (
+	"log"
+)
 
 //Tree node
 type Tree struct {
@@ -83,7 +85,6 @@ func postfix(tokens []Token) []Token {
 		postfix = append(postfix, term)
 	}
 
-	log.Println(postfix)
 	return postfix
 }
 
@@ -128,7 +129,6 @@ func tree(post []Token) Tree {
 	//Root of the tree
 	stack, t := stack.Pop()
 
-	inorder(&t)
 	return t
 }
 

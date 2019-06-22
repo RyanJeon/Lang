@@ -59,7 +59,6 @@ func tokenizer(line string) []Token {
 	words := strings.Fields(line)
 	tokens := []Token{}
 	for i, w := range words {
-		log.Println(w)
 		if isInt(w) {
 			token := Token{
 				Type:  "Int",
@@ -79,11 +78,17 @@ func tokenizer(line string) []Token {
 				Value: []byte(w),
 			}
 			tokens = append(tokens, token)
-		} else if isOperator(w) {
+		} else if w == "=>" {
 			//Check if this was a function call or func declaration
-			if i > 0 && w == "(" && tokens[i-1].Type == "Variable" {
+			if i > 0 && tokens[i-1].Type == "Variable" {
 				tokens[i-1].Type = "Function"
 			}
+			token := Token{
+				Type:  "FunctionParam",
+				Value: []byte(w),
+			}
+			tokens = append(tokens, token)
+		} else if isOperator(w) {
 			token := Token{
 				Type:  "Operator",
 				Value: []byte(w),
@@ -95,9 +100,21 @@ func tokenizer(line string) []Token {
 				Value: []byte(w),
 			}
 			tokens = append(tokens, token)
-		} else if w == "}" {
+		} else if w == "(" {
 			token := Token{
-				Type:  "CurlyLeft",
+				Type:  "(",
+				Value: []byte(w),
+			}
+			tokens = append(tokens, token)
+		} else if w == ")" {
+			token := Token{
+				Type:  ")",
+				Value: []byte(w),
+			}
+			tokens = append(tokens, token)
+		} else if w == "End" {
+			token := Token{
+				Type:  "End",
 				Value: []byte(w),
 			}
 			tokens = append(tokens, token)

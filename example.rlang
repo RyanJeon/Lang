@@ -1,9 +1,7 @@
-Int foo ( ) {
-    Int a = 2
-    Int b = 6
-    print ( a * b )
-}
-Int execute ( ) {
-    foo ( )
-    print ( 10 )
-}
+Int foo => Int c , Int b
+    print ( b + c )
+End
+
+Int execute =>
+    foo ( 1 , 3 )
+End

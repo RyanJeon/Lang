@@ -8,17 +8,13 @@ RyanLang is a programming langauge that supports both Korean and English keyword
 
 #### Example .rlang code
 ```
-Int execute ( ) {
-    Int a = 10
-    출력 ( a + 1 )
-}
-```
-The same can be done through this code
-```
-Int execute ( ) {
-    Int a = 10
-    print ( a + 1 )
-}
+Int foo => Int c , Int b
+    print ( b + c )
+End
+
+Int execute =>
+    foo ( 1 , 3 )
+End
 ```
 
 
