@@ -12,6 +12,7 @@ type Tree struct {
 	Right *Tree
 }
 
+// * and / have higher precendent than + or -
 func precedent(operator string) int {
 	if operator == "*" || operator == "/" {
 		return 3
@@ -24,7 +25,7 @@ func precedent(operator string) int {
 }
 
 //Arithmatic Convert infix to post fix Shunting Yard algo
-func postfix(tokens []Token) []Token {
+func TokensPostfix(tokens []Token) []Token {
 	operators := make(Stack, 0)
 	output := make(Queue, 0)
 	postfix := []Token{}
@@ -132,7 +133,7 @@ func tree(post []Token) Tree {
 	return t
 }
 
-//In Order Traversal for logging tree content
+//In Order Traversal for logging tree content / helper to see the tree content
 func inorder(tree *Tree) {
 	if tree != nil {
 		inorder(tree.Left)

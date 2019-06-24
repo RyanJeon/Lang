@@ -55,3 +55,40 @@ func treeAssemble(tree *Tree, f *os.File) {
 		f.WriteString("retq\n")
 	}
 }
+
+//CodeGen takes a statement classification and outputs corresponding assembly
+func CodeGen(class string, tokens []Token, f *os.File) {
+	switch class {
+	case "Test":
+		t := tree(TokensPostfix(tokens))
+		asm64(&t, f)
+		break
+	case "VariableDeclaration":
+		t := tree(TokensPostfix(tokens))
+		asm64(&t, f)
+		break
+	case "FunctionDeclaration":
+		FunctionDeclaration(tokens, f)
+		break
+	case "FunctionCall":
+		FunctionCall(tokens, f)
+		break
+	case "EndOfFunction":
+		f.WriteString("movq	%rbp, %rsp\n")
+		f.WriteString("popq	%rbp\n")
+
+		//move rsp to point to the return address. (paramCount*8) is there to
+		//take account of the fact that variables passed in as parameters are
+		//above ret address in the stack, and local variables are right below
+		//the return address. However, both types of variables are in LocalVariable
+		//map
+		code := fmt.Sprintf("addq	$%d, %%rsp\n", stackindex-8-(paramCount*8))
+		f.WriteString(code)
+		f.WriteString("retq\n")
+
+		LocalVariable = make(map[string]int)
+		stackindex = 8
+		paramCount = 0 //reset param count for new function!
+		break
+	}
+}

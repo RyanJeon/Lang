@@ -39,7 +39,7 @@ func main() {
 		}
 		tokenized := tokenizer(code)
 		class := ClassifyStatement(tokenized)
-		Translate(class, tokenized, f)
+		CodeGen(class, tokenized, f)
 	}
 
 }

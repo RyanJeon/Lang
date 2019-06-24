@@ -89,7 +89,6 @@ func Declaration(tree *Tree, f *os.File, vartype string) {
 		return
 	}
 	termtype := (*tree).Type
-	log.Println(termtype)
 	switch termtype {
 	case "Declaration":
 		Declaration(tree.Right, f, vartype)
@@ -132,7 +131,6 @@ func FunctionDeclaration(tokens []Token, f *os.File) {
 	f.WriteString(code)
 	f.WriteString("pushq   %rbp\n")
 	f.WriteString("movq	%rsp, %rbp\n")
-	log.Println(tokens)
 	// Dec Func ( **variables** ) {
 	i := 3
 	for i < len(tokens) {
@@ -153,16 +151,15 @@ func FunctionDeclaration(tokens []Token, f *os.File) {
 	FunctionParamMap[string(tokens[1].Value)] = paramCount
 }
 
+//FunctionCall : Provides assembly for functioncall statement
 func FunctionCall(tokens []Token, f *os.File) {
 	//Print exception need fix later
 	if string(tokens[0].Value) == "print" {
-		t := tree(postfix(tokens))
+		t := tree(TokensPostfix(tokens))
 		asm64(&t, f)
 		return
 	}
 
-	log.Println("Function Call")
-	log.Println(tokens)
 	i := 2
 	j := 2
 	params := 0
@@ -170,9 +167,7 @@ func FunctionCall(tokens []Token, f *os.File) {
 		for j < len(tokens) && tokens[j].Type != "Comma" && string(tokens[j].Value) != ")" {
 			j++
 		}
-		log.Printf("CUrrent Tokens %d %d", i, j)
-		log.Println(tokens[i:j])
-		t := tree(postfix(tokens[i:j]))
+		t := tree(TokensPostfix(tokens[i:j]))
 		asm64(&t, f)
 		j++
 		i = j
@@ -183,57 +178,4 @@ func FunctionCall(tokens []Token, f *os.File) {
 
 	f.WriteString(fmt.Sprintf("callq	%s\n", string(tokens[0].Value)))
 	f.WriteString(fmt.Sprintf("addq	$%d, %%rsp\n", params*8))
-	log.Println("End of fucn call")
-}
-
-//Translate takes a statement classification and does appropriate work
-func Translate(class string, tokens []Token, f *os.File) {
-	switch class {
-	case "Test":
-		t := tree(postfix(tokens))
-		asm64(&t, f)
-		break
-	case "VariableDeclaration":
-		t := tree(postfix(tokens))
-		asm64(&t, f)
-		break
-	case "FunctionDeclaration":
-		log.Println("Function")
-		FunctionDeclaration(tokens, f)
-		break
-	case "FunctionCall":
-		log.Println("Func Call")
-		FunctionCall(tokens, f)
-		break
-	case "EndOfFunction":
-		//If there was local variable
-		// if stackindex > 8 {
-
-		// 	f.WriteString("movq	%rbp, %rsp\n")
-		// 	f.WriteString("popq	%rbp\n") //restore rbp
-		// 	for i := 0; i < (stackindex/8)-1; i++ {
-		// 		//pop remaining local variable
-		// 		f.WriteString("popq	%rcx\n")
-		// 	}
-		// 	//Reset local variable map
-		// 	LocalVariable = make(map[string]int)
-		// 	stackindex = 8
-		// }
-		f.WriteString("movq	%rbp, %rsp\n")
-		f.WriteString("popq	%rbp\n")
-
-		//move rsp to point to the return address. (paramCount*8) is there to
-		//take account of the fact that variables passed in as parameters are
-		//above ret address in the stack, and local variables are right below
-		//the return address. However, both types of variables are in LocalVariable
-		//map
-		code := fmt.Sprintf("addq	$%d, %%rsp\n", stackindex-8-(paramCount*8))
-		f.WriteString(code)
-		f.WriteString("retq\n")
-
-		LocalVariable = make(map[string]int)
-		stackindex = 8
-		paramCount = 0 //reset param count for new function!
-		break
-	}
 }

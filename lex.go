@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"strings"
 )
 
@@ -134,7 +133,6 @@ func tokenizer(line string) []Token {
 			_, ok := LocalVariable[w]
 			//w is a local variable
 			//Note: Need to implement undeclared variable error
-			log.Println(LocalVariable)
 			if ok {
 				token := Token{
 					Type:  "Variable",

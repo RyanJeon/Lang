@@ -72,7 +72,6 @@ func addToClassTree(classTreeRoot classTree, statement []string, class string) {
 
 //ClassifyStatement : takes infix token array and classifies the statement
 func ClassifyStatement(tokens []Token) string {
-	log.Println(tokens)
 	cur := classTreeRoot
 	for _, t := range tokens {
 		key := t.Type
@@ -104,6 +103,5 @@ func ClassifyStatement(tokens []Token) string {
 		log.Fatalf("Unrecognized statement : StatementType does not exist")
 	}
 
-	log.Println(statementType.Type)
 	return statementType.Type
 }

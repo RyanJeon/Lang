@@ -1,6 +1,6 @@
 # RyanLang
 
-##### Warning: RyanLang is in a very crude stage. Also I am also accepting a good name for this language.
+##### Warning: RyanLang is in a very crude stage. Also I am also accepting a good name for this language. As the language is in a development stage, keywords will be added as the language becomes more useful!
 
 # Info
 
@@ -9,11 +9,13 @@ RyanLang is a programming langauge that supports both Korean and English keyword
 #### Example .rlang code
 ```
 Int foo => Int c , Int b
-    print ( b + c )
+    Int grub = 10
+    print ( c + grub )
 End
 
 Int execute =>
-    foo ( 1 , 3 )
+    Int a = 15 + 32
+    foo ( a + 2 , 5 )
 End
 ```
 
@@ -30,7 +32,6 @@ $ ./example.rlang.out
 - Basic Arithmetic
 
 ### Need to be done this week
-- Functions should support parameters
 - Korean support for delclaration
 
 ### Some Problems
