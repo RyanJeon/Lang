@@ -9,7 +9,11 @@ import (
 //LocalVariable : map of local variable relative stack index
 var LocalVariable map[string]int
 
+//FunctionParamMap : Keeps track of how many parameter a function takes
+var FunctionParamMap map[string]int
+
 var stackindex int
+var paramCount int //Keeps track of how many parameters are in a function
 
 //BytesToInt : Convert int ascii value to int
 func BytesToInt(bytes []byte) int {
@@ -110,19 +114,13 @@ func Declaration(tree *Tree, f *os.File, vartype string) {
 	case "Int":
 		Arithmetic(tree, f)
 		//move rbp to top of the stack again
-		if len(LocalVariable) > 1 {
-			//pop
-			f.WriteString("popq	%rbp\n")
-		}
+		f.WriteString("popq	%rbp\n")
 		f.WriteString("pushq	%rax\n")
 		break
 	case "Operator":
 		Arithmetic(tree, f)
 		//move rbp to top of the stack again
-		if len(LocalVariable) > 1 {
-			//pop
-			f.WriteString("popq	%rbp\n")
-		}
+		f.WriteString("popq	%rbp\n")
 		f.WriteString("pushq	%rax\n")
 		break
 	}
@@ -132,6 +130,8 @@ func Declaration(tree *Tree, f *os.File, vartype string) {
 func FunctionDeclaration(tokens []Token, f *os.File) {
 	code := fmt.Sprintf("%s:\n", string(tokens[1].Value))
 	f.WriteString(code)
+	f.WriteString("pushq   %rbp\n")
+	f.WriteString("movq	%rsp, %rbp\n")
 	log.Println(tokens)
 	// Dec Func ( **variables** ) {
 	i := 3
@@ -143,10 +143,14 @@ func FunctionDeclaration(tokens []Token, f *os.File) {
 		if tokens[i].Type != "Declaration" || tokens[i+1].Type != "Variable" {
 			log.Fatalf("Unexpected %s: Interpret error", string(tokens[i].Value))
 		}
-		LocalVariable[string(tokens[i+1].Value)] = stackindex
+		LocalVariable[string(tokens[i+1].Value)] = stackindex - 8
 		stackindex = stackindex + 8
+		paramCount++ //Increase number of parameter
 		i = i + 2
 	}
+
+	//Register # of parameters for the function
+	FunctionParamMap[string(tokens[1].Value)] = paramCount
 }
 
 func FunctionCall(tokens []Token, f *os.File) {
@@ -173,18 +177,12 @@ func FunctionCall(tokens []Token, f *os.File) {
 		j++
 		i = j
 
-		if len(LocalVariable) > 0 || params > 0 {
-			//pop
-			f.WriteString("popq	%rbp\n")
-		}
 		f.WriteString("pushq	%rax\n")
-
-		f.WriteString("pushq	%rbp\n")
-		f.WriteString("movq	%rsp, %rbp\n")
 		params++
 	}
 
 	f.WriteString(fmt.Sprintf("callq	%s\n", string(tokens[0].Value)))
+	f.WriteString(fmt.Sprintf("addq	$%d, %%rsp\n", params*8))
 	log.Println("End of fucn call")
 }
 
@@ -209,20 +207,33 @@ func Translate(class string, tokens []Token, f *os.File) {
 		break
 	case "EndOfFunction":
 		//If there was local variable
-		if stackindex > 8 {
+		// if stackindex > 8 {
 
-			f.WriteString("movq	%rbp, %rsp\n")
-			f.WriteString("popq	%rbp\n") //restore rbp
-			for i := 0; i < (stackindex/8)-1; i++ {
-				//pop remaining local variable
-				f.WriteString("popq	%rcx\n")
-			}
-			//Reset local variable map
-			LocalVariable = make(map[string]int)
-			stackindex = 8
-		}
-		f.WriteString("movq	%rsp, %rbp\n")
+		// 	f.WriteString("movq	%rbp, %rsp\n")
+		// 	f.WriteString("popq	%rbp\n") //restore rbp
+		// 	for i := 0; i < (stackindex/8)-1; i++ {
+		// 		//pop remaining local variable
+		// 		f.WriteString("popq	%rcx\n")
+		// 	}
+		// 	//Reset local variable map
+		// 	LocalVariable = make(map[string]int)
+		// 	stackindex = 8
+		// }
+		f.WriteString("movq	%rbp, %rsp\n")
+		f.WriteString("popq	%rbp\n")
+
+		//move rsp to point to the return address. (paramCount*8) is there to
+		//take account of the fact that variables passed in as parameters are
+		//above ret address in the stack, and local variables are right below
+		//the return address. However, both types of variables are in LocalVariable
+		//map
+		code := fmt.Sprintf("addq	$%d, %%rsp\n", stackindex-8-(paramCount*8))
+		f.WriteString(code)
 		f.WriteString("retq\n")
+
+		LocalVariable = make(map[string]int)
+		stackindex = 8
+		paramCount = 0 //reset param count for new function!
 		break
 	}
 }

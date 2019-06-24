@@ -13,6 +13,7 @@ func main() {
 
 	//Initialize Local Variable map
 	LocalVariable = make(map[string]int)
+	FunctionParamMap = make(map[string]int)
 	//Initialize stack index for local variables
 	stackindex = 8
 
