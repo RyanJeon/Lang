@@ -91,6 +91,8 @@ func TokensPostfix(tokens []Token) []Token {
 
 //Postfix to Abstract Syntax Tree
 func tree(post []Token) Tree {
+	log.Println("Tree")
+	log.Println(post)
 	stack := make(TreeStack, 0)
 
 	for _, t := range post {

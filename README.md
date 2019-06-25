@@ -21,8 +21,10 @@ End
 
 
 #### Compiling / Running .rlang file
+##### Install GCC to compile assembly to executable!
 ```sh
 $ ./rlang example.rlang
+$ gcc example.asm -o example.out -e execute
 $ ./example.rlang.out
 ```
 
@@ -33,6 +35,8 @@ $ ./example.rlang.out
 
 ### Need to be done this week
 - Korean support for delclaration
+- Fix variable declaration with arithmetic expression and function call ex) foo(a,b) + 1
+- Support negative number print
 
 ### Some Problems
 - What about a conflict between variable and keywords? For example, someone who wants to write in Korean decides to declare a variable in English, does that person have to be aware of English keywords as well?:

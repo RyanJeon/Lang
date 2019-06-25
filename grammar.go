@@ -40,6 +40,8 @@ func GrammarInit() {
 	functionCall = []string{"Function", "("}
 	addToClassTree(classTreeRoot, functionCall, "FunctionCall")
 
+	addToClassTree(classTreeRoot, []string{"Return"}, "FunctionReturn")
+
 	addToClassTree(classTreeRoot, []string{"End"}, "EndOfFunction")
 
 }

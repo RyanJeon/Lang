@@ -125,6 +125,46 @@ func Declaration(tree *Tree, f *os.File, vartype string) {
 	}
 }
 
+func VariableDeclaration(tokens []Token, f *os.File) {
+	variableName := string(tokens[1].Value)
+	LocalVariable[variableName] = stackindex
+	stackindex = stackindex + 8
+	//log.Println(tokens)
+	//Currently just in type so just do arithmetic
+	for i := 3; i < len(tokens); i++ {
+		//If function call seen
+		if tokens[i].Type == "Function" {
+			j := i
+			for j < len(tokens) && string(tokens[j].Value) != ")" {
+				j++
+			}
+			//Make a function call
+			log.Println(tokens[i : j+1])
+			FunctionCall(tokens[i:j+1], f)
+
+			i = j
+		} else {
+			log.Println("Arithmetic")
+			j := i
+			for j < len(tokens) && string(tokens[j].Type) != "Function" {
+				j++
+			}
+			//Make arithmetic evaluation
+			log.Println(tokens[i:j])
+			t := tree(TokensPostfix(tokens[i:j]))
+			Arithmetic(&t, f)
+
+			i = j
+		}
+	}
+
+	f.WriteString("popq	%rbp\n")
+	f.WriteString("pushq	%rax\n")
+
+	f.WriteString("pushq	%rbp\n")
+	f.WriteString("movq	%rsp, %rbp\n")
+}
+
 //FunctionDeclaration : Writes assembly for function declaration statement
 func FunctionDeclaration(tokens []Token, f *os.File) {
 	code := fmt.Sprintf("%s:\n", string(tokens[1].Value))
@@ -178,4 +218,9 @@ func FunctionCall(tokens []Token, f *os.File) {
 
 	f.WriteString(fmt.Sprintf("callq	%s\n", string(tokens[0].Value)))
 	f.WriteString(fmt.Sprintf("addq	$%d, %%rsp\n", params*8))
+}
+
+func FunctionReturn(tokens []Token, f *os.File) {
+	t := tree(TokensPostfix(tokens[1:]))
+	asm64(&t, f)
 }

@@ -64,9 +64,10 @@ func CodeGen(class string, tokens []Token, f *os.File) {
 		asm64(&t, f)
 		break
 	case "VariableDeclaration":
-		t := tree(TokensPostfix(tokens))
-		asm64(&t, f)
+		VariableDeclaration(tokens, f)
 		break
+	case "FunctionReturn":
+		FunctionReturn(tokens, f)
 	case "FunctionDeclaration":
 		FunctionDeclaration(tokens, f)
 		break

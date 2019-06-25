@@ -1,9 +1,8 @@
-Int foo => Int c , Int b
-    Int grub = 10
-    print ( c + grub )
+Int foo => Int a , Int b
+    return a + b
 End
 
 Int execute =>
-    Int a = 15 + 32
-    foo ( a + 2 , 5 )
+    Int a = foo ( 2 , 3 ) 2 + 3
+    print ( a )
 End

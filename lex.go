@@ -129,6 +129,12 @@ func tokenizer(line string) []Token {
 				Value: []byte(w),
 			}
 			tokens = append(tokens, token)
+		} else if w == "return" {
+			token := Token{
+				Type:  "Return",
+				Value: []byte(w),
+			}
+			tokens = append(tokens, token)
 		} else {
 			_, ok := LocalVariable[w]
 			//w is a local variable
