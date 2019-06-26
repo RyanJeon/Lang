@@ -35,8 +35,16 @@ $ ./example.rlang.out
 
 ### Need to be done this week
 - Korean support for delclaration
-- Fix variable declaration with arithmetic expression and function call ex) foo(a,b) + 1
 - Support negative number print
+
+
+### Still To Do
+- Clean up parser.go. Type function is obsolete in both tree and postfix functions
+- Conditional
+- Loop
+- Declare multiple variable types (String, array, boolean etc..)
+- Import
+- Ideally compiler can make executable instead of assembly. Ref golang syscall
 
 ### Some Problems
 - What about a conflict between variable and keywords? For example, someone who wants to write in Korean decides to declare a variable in English, does that person have to be aware of English keywords as well?:

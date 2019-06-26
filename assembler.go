@@ -72,7 +72,14 @@ func CodeGen(class string, tokens []Token, f *os.File) {
 		FunctionDeclaration(tokens, f)
 		break
 	case "FunctionCall":
-		FunctionCall(tokens, f)
+		//Print exception need fix later
+		if string(tokens[0].Value) == "print" {
+			t := tree(TokensPostfix(tokens))
+			asm64(&t, f)
+		} else {
+			FunctionCall(AddFunctionCallToStack(tokens), f)
+			FunctionCallStack, _ = FunctionCallStack.Pop()
+		}
 		break
 	case "EndOfFunction":
 		f.WriteString("movq	%rbp, %rsp\n")

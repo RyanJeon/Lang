@@ -3,6 +3,6 @@ Int foo => Int a , Int b
 End
 
 Int execute =>
-    Int a = foo ( 2 , 3 ) 2 + 3
+    Int a = 3 * foo ( 1 , 2 )
     print ( a )
 End

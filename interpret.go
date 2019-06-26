@@ -6,11 +6,20 @@ import (
 	"os"
 )
 
+//Call is interface for a function call
+type Call struct {
+	Name   string
+	Inputs [][]Token
+}
+
 //LocalVariable : map of local variable relative stack index
 var LocalVariable map[string]int
 
 //FunctionParamMap : Keeps track of how many parameter a function takes
 var FunctionParamMap map[string]int
+
+//FunctionCallStack : Keeps track of function calls
+var FunctionCallStack CallStack
 
 var stackindex int
 var paramCount int //Keeps track of how many parameters are in a function
@@ -43,6 +52,10 @@ func Arithmetic(tree *Tree, f *os.File) {
 			index := (len(LocalVariable)+1)*8 - offset
 			code := fmt.Sprintf("movq	%d(%%rbp), %%rax\n", index)
 			f.WriteString(code)
+		} else if (*tree).Type == "FunctionCall" {
+			var call Call
+			FunctionCallStack, call = FunctionCallStack.Pop()
+			FunctionCall(call, f)
 		} else {
 			s := fmt.Sprintf("movq	$%s, %%rax\n", string((*tree).Value))
 			f.WriteString(s)
@@ -129,34 +142,47 @@ func VariableDeclaration(tokens []Token, f *os.File) {
 	variableName := string(tokens[1].Value)
 	LocalVariable[variableName] = stackindex
 	stackindex = stackindex + 8
-	//log.Println(tokens)
+
+	newTokenList := make([]Token, 0)
 	//Currently just in type so just do arithmetic
 	for i := 3; i < len(tokens); i++ {
 		//If function call seen
 		if tokens[i].Type == "Function" {
+			log.Println("Function Dec")
 			j := i
 			for j < len(tokens) && string(tokens[j].Value) != ")" {
 				j++
 			}
 			//Make a function call
-			log.Println(tokens[i : j+1])
-			FunctionCall(tokens[i:j+1], f)
+			// log.Println(tokens[i : j+1])
+			AddFunctionCallToStack(tokens[i : j+1])
+			// log.Println(FunctionCallStack)
 
+			tokens[i].Type = "FunctionCall"
+			newTokenList = append(newTokenList, tokens[i])
 			i = j
 		} else {
-			log.Println("Arithmetic")
-			j := i
-			for j < len(tokens) && string(tokens[j].Type) != "Function" {
-				j++
-			}
-			//Make arithmetic evaluation
-			log.Println(tokens[i:j])
-			t := tree(TokensPostfix(tokens[i:j]))
-			Arithmetic(&t, f)
-
-			i = j
+			newTokenList = append(newTokenList, tokens[i])
 		}
+		// else {
+		// 	log.Println("Arithmetic")
+		// 	j := i
+		// 	for j < len(tokens) && string(tokens[j].Type) != "Function" {
+		// 		j++
+		// 	}
+		// 	//Make arithmetic evaluation
+		// 	log.Println(tokens[i:j])
+		// 	t := tree(TokensPostfix(tokens[i:j]))
+		// 	Arithmetic(&t, f)
+
+		// 	i = j - 1
+		// }
 	}
+
+	log.Println("new token list")
+	log.Println(newTokenList)
+	t := tree(TokensPostfix(newTokenList))
+	Arithmetic(&t, f)
 
 	f.WriteString("popq	%rbp\n")
 	f.WriteString("pushq	%rax\n")
@@ -192,32 +218,51 @@ func FunctionDeclaration(tokens []Token, f *os.File) {
 }
 
 //FunctionCall : Provides assembly for functioncall statement
-func FunctionCall(tokens []Token, f *os.File) {
-	//Print exception need fix later
-	if string(tokens[0].Value) == "print" {
-		t := tree(TokensPostfix(tokens))
-		asm64(&t, f)
-		return
-	}
+func FunctionCall(functionCall Call, f *os.File) {
+	function := functionCall.Name
+	inputs := functionCall.Inputs
 
-	i := 2
-	j := 2
 	params := 0
-	for i < len(tokens) && string(tokens[i].Value) != ")" {
-		for j < len(tokens) && tokens[j].Type != "Comma" && string(tokens[j].Value) != ")" {
-			j++
-		}
-		t := tree(TokensPostfix(tokens[i:j]))
+	for _, input := range inputs {
+		t := tree(TokensPostfix(input))
 		asm64(&t, f)
-		j++
-		i = j
-
 		f.WriteString("pushq	%rax\n")
 		params++
 	}
 
-	f.WriteString(fmt.Sprintf("callq	%s\n", string(tokens[0].Value)))
+	f.WriteString(fmt.Sprintf("callq	%s\n", function))
 	f.WriteString(fmt.Sprintf("addq	$%d, %%rsp\n", params*8))
+}
+
+//AddFunctionCallToStack : adds function call to call stack
+func AddFunctionCallToStack(tokens []Token) Call {
+
+	callInputs := make([][]Token, 0)
+
+	i := 2
+	j := 2
+
+	//Iterate through the input for the function call
+	for i < len(tokens) && string(tokens[i].Value) != ")" {
+		for j < len(tokens) && tokens[j].Type != "Comma" && string(tokens[j].Value) != ")" {
+			j++
+		}
+
+		//One input in the function call
+		input := tokens[i:j]
+		callInputs = append(callInputs, input)
+
+		j++
+		i = j
+	}
+
+	call := Call{
+		Name:   string(tokens[0].Value),
+		Inputs: callInputs,
+	}
+
+	FunctionCallStack = FunctionCallStack.Push(call)
+	return call
 }
 
 func FunctionReturn(tokens []Token, f *os.File) {

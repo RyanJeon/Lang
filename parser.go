@@ -31,7 +31,7 @@ func TokensPostfix(tokens []Token) []Token {
 	postfix := []Token{}
 
 	for _, t := range tokens {
-		if t.Type == "Int" || t.Type == "Variable" {
+		if t.Type == "Int" || t.Type == "Variable" || t.Type == "FunctionCall" {
 			output = output.Add(t)
 		} else if t.Type == "Function" ||
 			t.Type == "Assignment" ||
@@ -96,13 +96,14 @@ func tree(post []Token) Tree {
 	stack := make(TreeStack, 0)
 
 	for _, t := range post {
-		if stack.isEmpty() || t.Type == "Int" || t.Type == "Variable" {
+		if stack.isEmpty() || t.Type == "Int" || t.Type == "Variable" || t.Type == "FunctionCall" {
 			stack = stack.Push(Tree{
 				t.Type,
 				t.Value,
 				nil,
 				nil,
 			})
+			//Type function is temporary for print
 		} else if t.Type == "Function" ||
 			t.Type == "Declaration" {
 			var t1 Tree
@@ -117,14 +118,18 @@ func tree(post []Token) Tree {
 		} else {
 			var t1 Tree
 			var t2 Tree
+			var root Tree
 			stack, t1 = stack.Pop()
+
+			//Could have been a function call before
 			stack, t2 = stack.Pop()
-			root := Tree{
+			root = Tree{
 				t.Type,
 				t.Value,
 				&t2,
 				&t1,
 			}
+
 			stack = stack.Push(root)
 		}
 	}
@@ -132,6 +137,7 @@ func tree(post []Token) Tree {
 	//Root of the tree
 	stack, t := stack.Pop()
 
+	inorder(&t)
 	return t
 }
 
@@ -139,7 +145,9 @@ func tree(post []Token) Tree {
 func inorder(tree *Tree) {
 	if tree != nil {
 		inorder(tree.Left)
-		log.Println((*tree).Value)
+		log.Println(string((*tree).Value))
 		inorder(tree.Right)
+	} else {
+		log.Println("NIL")
 	}
 }
