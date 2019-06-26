@@ -50,13 +50,22 @@ func (s CallStack) Push(v Call) CallStack {
 	return append(s, v)
 }
 
-//Pop : returns and pop the top of token stack
+//Pop : returns and pop the top of token CallStack
 func (s CallStack) Pop() (CallStack, Call) {
 	l := len(s)
 	if l == 0 {
 		log.Fatal("CallStack is Empty")
 	}
 	return s[:l-1], s[l-1]
+}
+
+//Poll : returns and pop the bottom of token CallStack
+func (s CallStack) Poll() (CallStack, Call) {
+	l := len(s)
+	if l == 0 {
+		log.Fatal("CallStack is Empty")
+	}
+	return s[1:l], s[0]
 }
 
 //Top : returns top of the stack

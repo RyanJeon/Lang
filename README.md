@@ -36,6 +36,7 @@ $ ./example.rlang.out
 ### Need to be done this week
 - Korean support for delclaration
 - Support negative number print
+- Function call should be able to take another function call as input ex) foo(foo(1))
 
 
 ### Still To Do

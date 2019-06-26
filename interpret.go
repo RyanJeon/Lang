@@ -54,7 +54,7 @@ func Arithmetic(tree *Tree, f *os.File) {
 			f.WriteString(code)
 		} else if (*tree).Type == "FunctionCall" {
 			var call Call
-			FunctionCallStack, call = FunctionCallStack.Pop()
+			FunctionCallStack, call = FunctionCallStack.Poll()
 			FunctionCall(call, f)
 		} else {
 			s := fmt.Sprintf("movq	$%s, %%rax\n", string((*tree).Value))
@@ -148,15 +148,12 @@ func VariableDeclaration(tokens []Token, f *os.File) {
 	for i := 3; i < len(tokens); i++ {
 		//If function call seen
 		if tokens[i].Type == "Function" {
-			log.Println("Function Dec")
 			j := i
 			for j < len(tokens) && string(tokens[j].Value) != ")" {
 				j++
 			}
 			//Make a function call
-			// log.Println(tokens[i : j+1])
 			AddFunctionCallToStack(tokens[i : j+1])
-			// log.Println(FunctionCallStack)
 
 			tokens[i].Type = "FunctionCall"
 			newTokenList = append(newTokenList, tokens[i])
@@ -164,23 +161,8 @@ func VariableDeclaration(tokens []Token, f *os.File) {
 		} else {
 			newTokenList = append(newTokenList, tokens[i])
 		}
-		// else {
-		// 	log.Println("Arithmetic")
-		// 	j := i
-		// 	for j < len(tokens) && string(tokens[j].Type) != "Function" {
-		// 		j++
-		// 	}
-		// 	//Make arithmetic evaluation
-		// 	log.Println(tokens[i:j])
-		// 	t := tree(TokensPostfix(tokens[i:j]))
-		// 	Arithmetic(&t, f)
-
-		// 	i = j - 1
-		// }
 	}
 
-	log.Println("new token list")
-	log.Println(newTokenList)
 	t := tree(TokensPostfix(newTokenList))
 	Arithmetic(&t, f)
 

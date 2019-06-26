@@ -1,8 +1,12 @@
+Int bar => Int b
+    return b
+End
+
 Int foo => Int a , Int b
     return a + b
 End
 
 Int execute =>
-    Int a = 3 * foo ( 1 , 2 )
+    Int a = foo ( 3 , 2 ) + bar ( 3 ) * 2
     print ( a )
 End

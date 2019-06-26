@@ -86,13 +86,12 @@ func TokensPostfix(tokens []Token) []Token {
 		postfix = append(postfix, term)
 	}
 
+	log.Println(postfix)
 	return postfix
 }
 
 //Postfix to Abstract Syntax Tree
 func tree(post []Token) Tree {
-	log.Println("Tree")
-	log.Println(post)
 	stack := make(TreeStack, 0)
 
 	for _, t := range post {
@@ -137,7 +136,6 @@ func tree(post []Token) Tree {
 	//Root of the tree
 	stack, t := stack.Pop()
 
-	inorder(&t)
 	return t
 }
 
