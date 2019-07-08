@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 )
@@ -38,7 +39,7 @@ func treeAssemble(tree *Tree, f *os.File) {
 		}
 		break
 	//End of func but need to be scalable
-	case "End":
+	case "}":
 		//If there was local variable
 		if stackindex > 8 {
 
@@ -56,8 +57,21 @@ func treeAssemble(tree *Tree, f *os.File) {
 	}
 }
 
+//ScanAndGen takes a scanner object and generates code given string input
+func ScanAndGen(scanner *bufio.Scanner, f *os.File) {
+	for scanner.Scan() {
+		code := scanner.Text()
+		if len(code) == 0 {
+			continue
+		}
+		tokenized := tokenizer(code)
+		class := ClassifyStatement(tokenized)
+		CodeGen(class, tokenized, f, scanner)
+	}
+}
+
 //CodeGen takes a statement classification and outputs corresponding assembly
-func CodeGen(class string, tokens []Token, f *os.File) {
+func CodeGen(class string, tokens []Token, f *os.File, scanner *bufio.Scanner) {
 	switch class {
 	case "Test":
 		t := tree(TokensPostfix(tokens))
@@ -69,6 +83,7 @@ func CodeGen(class string, tokens []Token, f *os.File) {
 	case "FunctionReturn":
 		FunctionReturn(tokens, f)
 	case "FunctionDeclaration":
+		EndStack = EndStack.Push("FunctionDeclaration")
 		FunctionDeclaration(tokens, f)
 		break
 	case "FunctionCall":
@@ -81,22 +96,34 @@ func CodeGen(class string, tokens []Token, f *os.File) {
 			FunctionCallStack, _ = FunctionCallStack.Pop()
 		}
 		break
-	case "EndOfFunction":
-		f.WriteString("movq	%rbp, %rsp\n")
-		f.WriteString("popq	%rbp\n")
+	case "EndOf":
+		var endType string
+		//Check what is ending
+		EndStack, endType = EndStack.Pop()
 
-		//move rsp to point to the return address. (paramCount*8) is there to
-		//take account of the fact that variables passed in as parameters are
-		//above ret address in the stack, and local variables are right below
-		//the return address. However, both types of variables are in LocalVariable
-		//map
-		code := fmt.Sprintf("addq	$%d, %%rsp\n", stackindex-8-(paramCount*8))
-		f.WriteString(code)
-		f.WriteString("retq\n")
+		if endType == "IfStatement" {
+			IfEnd(f)
+		} else if endType == "FunctionDeclaration" {
+			f.WriteString("movq	%rbp, %rsp\n")
+			f.WriteString("popq	%rbp\n")
 
-		LocalVariable = make(map[string]int)
-		stackindex = 8
-		paramCount = 0 //reset param count for new function!
+			//move rsp to point to the return address. (paramCount*8) is there to
+			//take account of the fact that variables passed in as parameters are
+			//above ret address in the stack, and local variables are right below
+			//the return address. However, both types of variables are in LocalVariable
+			//map
+			code := fmt.Sprintf("addq	$%d, %%rsp\n", stackindex-8-(paramCount*8))
+			f.WriteString(code)
+			f.WriteString("retq\n")
+
+			LocalVariable = make(map[string]int)
+			stackindex = 8
+			paramCount = 0 //reset param count for new function!
+		}
+
 		break
+	case "IfStatement":
+		EndStack = EndStack.Push("IfStatement")
+		IfStatement(tokens, f)
 	}
 }

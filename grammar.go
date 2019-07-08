@@ -20,29 +20,28 @@ type classTree struct {
 
 var classTreeRoot classTree
 
-var variableDeclaration []string
-var functionDeclaration []string
-var functionCall []string
-
-//GrammarInit : Initializes grammar tree
+//GrammarInit : Initializes grammar tree (Prefix of each statements) **Every type of statement has its own unique prefix to help grammar classification**
 func GrammarInit() {
 	classTreeRoot = classTree{
 		Type:     "Root",
 		Children: make(map[string]classTree),
 	}
 
-	variableDeclaration = []string{"Declaration", "Variable", "Assignment"}
+	variableDeclaration := []string{"Declaration", "Variable", "Assignment"}
 	addToClassTree(classTreeRoot, variableDeclaration, "VariableDeclaration")
 
-	functionDeclaration = []string{"Declaration", "Function", "=>"}
+	functionDeclaration := []string{"Declaration", "Function", "=>"}
 	addToClassTree(classTreeRoot, functionDeclaration, "FunctionDeclaration")
 
-	functionCall = []string{"Function", "("}
+	functionCall := []string{"Function", "("}
 	addToClassTree(classTreeRoot, functionCall, "FunctionCall")
+
+	ifStatement := []string{"If"}
+	addToClassTree(classTreeRoot, ifStatement, "IfStatement")
 
 	addToClassTree(classTreeRoot, []string{"Return"}, "FunctionReturn")
 
-	addToClassTree(classTreeRoot, []string{"End"}, "EndOfFunction")
+	addToClassTree(classTreeRoot, []string{"}"}, "EndOf")
 
 }
 
@@ -85,7 +84,7 @@ func ClassifyStatement(tokens []Token) string {
 		_, exist := cur.Children[key]
 
 		if !exist {
-			log.Fatalf("Unexpected %s : (grammar.go)", string(t.Value))
+			log.Fatalf("Unexpected %s : (grammar.go Classify)", string(t.Value))
 		}
 
 		cur = cur.Children[key]

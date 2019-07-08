@@ -1,12 +1,4 @@
-Int bar => Int b
-    return b
-End
-
-Int foo => Int a , Int b
-    return a + b
-End
-
 Int execute =>
-    Int a = foo ( 3 , 2 ) + bar ( 3 ) * 2
+    Int a = ( 1 + 2 ) * ( 6 - 3 )
     print ( a )
-End
+}

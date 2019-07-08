@@ -21,6 +21,20 @@ var FunctionParamMap map[string]int
 //FunctionCallStack : Keeps track of function calls
 var FunctionCallStack CallStack
 
+//endStack helps determine what "}" will be ending. ex) conditional, function, loop
+var EndStack StringStack
+
+//Edit
+//IfStack stores blocks of statements. Should be empty at the end of compilation if all blocks were closed properly
+var IfStack StringStack
+
+//Edit
+//IfEndStack stores the type of block for each block. ex) block under function is typed "Function", block under if conditional it is typed "If"
+var IfEndStack StringStack
+
+//BlockCounter stores how many statement blocks there are. (forloop and if)
+var BlockCounter int
+
 var stackindex int
 var paramCount int //Keeps track of how many parameters are in a function
 
@@ -250,4 +264,38 @@ func AddFunctionCallToStack(tokens []Token) Call {
 func FunctionReturn(tokens []Token, f *os.File) {
 	t := tree(TokensPostfix(tokens[1:]))
 	asm64(&t, f)
+}
+
+//IfStatement : When the keyword IF is detected
+func IfStatement(tokens []Token, f *os.File) {
+	f.WriteString("cmpq	%rax, %rbx\n")
+
+	//If the condition in if statement is not met, it will jump to the "jump" block
+	jump := fmt.Sprintf("ifblock_%d", BlockCounter)
+	code := fmt.Sprintf("jmp	%s\n", jump)
+	f.WriteString(code)
+	//Push the jump address to the if stack
+	IfStack = IfStack.Push(jump)
+
+	//do everything within the if block
+	// Here
+	////////
+
+	//Increment block counter to avoid conflict
+	BlockCounter++
+}
+
+//IfEnd for ending an if conditional
+func IfEnd(f *os.File) {
+	var address string
+	IfStack, address = IfStack.Pop()
+
+	code := fmt.Sprintf("%s:\n", address)
+	f.WriteString(code)
+	//If block has been executed jump to the end of the if statement
+	// ifEnd := fmt.Sprintf("ifEnd_%d", BlockCounter)
+	// code = fmt.Sprintf("jmp	%s\n", ifEnd)
+	// f.WriteString(code)
+	// IfEndStack = IfEndStack.Push(ifEnd)
+	// BlockCounter++
 }

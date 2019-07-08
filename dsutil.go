@@ -11,6 +11,9 @@ type TreeStack []Tree
 //CallStack : Stack for function calls
 type CallStack []Call
 
+//StringStack : Stack for strings ... lol
+type StringStack []string
+
 //Queue implementation
 type Queue []Token
 
@@ -78,6 +81,43 @@ func (s CallStack) Top() Call {
 }
 
 func (s CallStack) isEmpty() bool {
+	return len(s) == 0
+}
+
+//StringStack
+//Push : pushes token to stack
+func (s StringStack) Push(v string) StringStack {
+	return append(s, v)
+}
+
+//Pop : returns and pop the top of token CallStack
+func (s StringStack) Pop() (StringStack, string) {
+	l := len(s)
+	if l == 0 {
+		log.Fatal("StringStack is Empty")
+	}
+	return s[:l-1], s[l-1]
+}
+
+//Poll : returns and pop the bottom of token CallStack
+func (s StringStack) Poll() (StringStack, string) {
+	l := len(s)
+	if l == 0 {
+		log.Fatal("CallStack is Empty")
+	}
+	return s[1:l], s[0]
+}
+
+//Top : returns top of the stack
+func (s StringStack) Top() string {
+	l := len(s)
+	if l == 0 {
+		log.Fatal("CallStack is Empty")
+	}
+	return s[l-1]
+}
+
+func (s StringStack) isEmpty() bool {
 	return len(s) == 0
 }
 

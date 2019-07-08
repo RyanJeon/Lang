@@ -30,7 +30,9 @@ func isInt(word string) bool {
 
 func isOperator(word string) bool {
 	chars := strings.Split(word, "")
-
+	if word == "or" || word == "and" || word == ">" || word == "<" || word == "==" || word == "!=" {
+		return true
+	}
 	//Loop over characters
 	for _, c := range chars {
 		bytechar := []byte(c)
@@ -82,9 +84,19 @@ func tokenizer(line string) []Token {
 			if i > 0 && tokens[i-1].Type == "Variable" {
 				tokens[i-1].Type = "Function"
 			}
-			token := Token{
-				Type:  "FunctionParam",
-				Value: []byte(w),
+
+			var token Token
+			//If this was if declaration
+			if tokens[0].Type == "If" {
+				token = Token{
+					Type:  "FunctionParam",
+					Value: []byte(w),
+				}
+			} else {
+				token = Token{
+					Type:  "FunctionParam",
+					Value: []byte(w),
+				}
 			}
 			tokens = append(tokens, token)
 		} else if isOperator(w) {
@@ -111,9 +123,9 @@ func tokenizer(line string) []Token {
 				Value: []byte(w),
 			}
 			tokens = append(tokens, token)
-		} else if w == "End" {
+		} else if w == "}" {
 			token := Token{
-				Type:  "End",
+				Type:  "}",
 				Value: []byte(w),
 			}
 			tokens = append(tokens, token)
@@ -132,6 +144,12 @@ func tokenizer(line string) []Token {
 		} else if w == "return" {
 			token := Token{
 				Type:  "Return",
+				Value: []byte(w),
+			}
+			tokens = append(tokens, token)
+		} else if w == "if" {
+			token := Token{
+				Type:  "If",
 				Value: []byte(w),
 			}
 			tokens = append(tokens, token)
