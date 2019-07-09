@@ -266,23 +266,86 @@ func FunctionReturn(tokens []Token, f *os.File) {
 	asm64(&t, f)
 }
 
-//IfStatement : When the keyword IF is detected
-func IfStatement(tokens []Token, f *os.File) {
+func isCondOp(token Token) bool {
+	word := string(token.Value)
+	return word == "or" || word == "and" || word == ">" || word == "<" || word == "==" || word == "!="
+}
+
+//takes conditional statement and generates assembly
+func conditionalHelper(tokens []Token, f *os.File) {
+
+	//Left and right pointer to parse portion of conditional statement
+	left := 0
+	right := 0
+
+	//general conditional statement grammar :
+	// {expression} {conditional operator} {expression}
+	// Need to check that expressions on both sides are the same type
+
+	for i, token := range tokens {
+
+		//If current token is conditional operator
+		if isCondOp(token) {
+			right = i + 1
+			for right < len(tokens) && !isCondOp(tokens[right]) {
+				right++
+			}
+
+			//segment of conditional expression
+			lhs := tokens[left:i]
+			rhs := tokens[i+1 : right]
+			op := tokens[i]
+
+			conditionalExpGen(lhs, rhs, op, f)
+			left = right
+		}
+	}
+}
+
+func conditionalExpGen(lhs []Token, rhs []Token, op Token, f *os.File) {
+	log.Println(lhs)
+	log.Println(rhs)
+	log.Println(op)
+
+	TokenProcess(lhs, f)
+	f.WriteString("movq	%rax, %rbx\n")
+	TokenProcess(rhs, f)
 	f.WriteString("cmpq	%rax, %rbx\n")
 
 	//If the condition in if statement is not met, it will jump to the "jump" block
 	jump := fmt.Sprintf("ifblock_%d", BlockCounter)
-	code := fmt.Sprintf("jmp	%s\n", jump)
-	f.WriteString(code)
-	//Push the jump address to the if stack
-	IfStack = IfStack.Push(jump)
 
 	//do everything within the if block
 	// Here
 	////////
 
+	switch string(op.Value) {
+	case ">":
+		code := fmt.Sprintf("jle	%s\n", jump)
+		f.WriteString(code)
+	case "<":
+		code := fmt.Sprintf("jge	%s\n", jump)
+		f.WriteString(code)
+	case "==":
+		code := fmt.Sprintf("jne	%s\n", jump)
+		f.WriteString(code)
+	}
+
+	//Push the jump address to the if stack
+	IfStack = IfStack.Push(jump)
 	//Increment block counter to avoid conflict
 	BlockCounter++
+}
+
+//IfStatement : When the keyword IF is detected
+func IfStatement(tokens []Token, f *os.File) {
+	if string(tokens[len(tokens)-1].Value) != "=>" {
+		log.Fatal("Expected => in if statement")
+	} else {
+		conditional := tokens[1 : len(tokens)-1]
+		conditionalHelper(conditional, f)
+		log.Println(conditional)
+	}
 }
 
 //IfEnd for ending an if conditional

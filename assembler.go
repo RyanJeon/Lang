@@ -6,6 +6,12 @@ import (
 	"os"
 )
 
+//TokenProcess general token prcessing function
+func TokenProcess(tokens []Token, f *os.File) {
+	t := tree(TokensPostfix(tokens))
+	asm64(&t, f)
+}
+
 func asm64(tree *Tree, f *os.File) {
 	//Set up assembly
 	treeAssemble(tree, f)
