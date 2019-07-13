@@ -64,6 +64,8 @@ func Arithmetic(tree *Tree, f *os.File) {
 			}
 
 			index := (len(LocalVariable)+1)*8 - offset
+			log.Println(len(LocalVariable) + 1)
+			log.Println((len(LocalVariable) + 1) * 8)
 			code := fmt.Sprintf("movq	%d(%%rbp), %%rax\n", index)
 			f.WriteString(code)
 		} else if (*tree).Type == "FunctionCall" {
@@ -154,8 +156,6 @@ func Declaration(tree *Tree, f *os.File, vartype string) {
 
 func VariableDeclaration(tokens []Token, f *os.File) {
 	variableName := string(tokens[1].Value)
-	LocalVariable[variableName] = stackindex
-	stackindex = stackindex + 8
 
 	newTokenList := make([]Token, 0)
 	//Currently just in type so just do arithmetic
@@ -180,6 +180,9 @@ func VariableDeclaration(tokens []Token, f *os.File) {
 	t := tree(TokensPostfix(newTokenList))
 	Arithmetic(&t, f)
 
+	LocalVariable[variableName] = stackindex
+	stackindex = stackindex + 8
+
 	f.WriteString("popq	%rbp\n")
 	f.WriteString("pushq	%rax\n")
 
@@ -203,13 +206,14 @@ func FunctionDeclaration(tokens []Token, f *os.File) {
 		if tokens[i].Type != "Declaration" || tokens[i+1].Type != "Variable" {
 			log.Fatalf("Unexpected %s: Interpret error", string(tokens[i].Value))
 		}
-		LocalVariable[string(tokens[i+1].Value)] = stackindex
+		LocalVariable[string(tokens[i+1].Value)] = stackindex - 8
 		stackindex = stackindex + 8
 		paramCount++ //Increase number of parameter
 		i = i + 2
 	}
 
 	//Register # of parameters for the function
+	log.Println(LocalVariable)
 	FunctionParamMap[string(tokens[1].Value)] = paramCount
 }
 

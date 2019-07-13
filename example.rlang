@@ -1,8 +1,10 @@
 Int foo => Int a , Int b
-    Int c = a + b
+    Int c = b + a
     return c
 }
 Int execute =>
-    Int c = foo ( 2 , 4 )
+    Int a = 2
+    Int b = 10
+    Int c = foo ( a , b )
     print ( c )
 }
