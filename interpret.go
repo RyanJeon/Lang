@@ -203,7 +203,7 @@ func FunctionDeclaration(tokens []Token, f *os.File) {
 		if tokens[i].Type != "Declaration" || tokens[i+1].Type != "Variable" {
 			log.Fatalf("Unexpected %s: Interpret error", string(tokens[i].Value))
 		}
-		LocalVariable[string(tokens[i+1].Value)] = stackindex - 8
+		LocalVariable[string(tokens[i+1].Value)] = stackindex
 		stackindex = stackindex + 8
 		paramCount++ //Increase number of parameter
 		i = i + 2
@@ -333,8 +333,7 @@ func conditionalExpGen(lhs []Token, rhs []Token, op Token, f *os.File) {
 
 	//Push the jump address to the if stack
 	IfStack = IfStack.Push(jump)
-	//Increment block counter to avoid conflict
-	BlockCounter++
+
 }
 
 //IfStatement : When the keyword IF is detected
@@ -346,6 +345,18 @@ func IfStatement(tokens []Token, f *os.File) {
 		conditionalHelper(conditional, f)
 		log.Println(conditional)
 	}
+
+	//Increment block counter to avoid conflict
+	BlockCounter++
+}
+
+//ElseStatement : When you encounter else statement
+func ElseStatement(f *os.File) {
+	var address string
+	IfStack, address = IfStack.Pop()
+
+	code := fmt.Sprintf("%s:\n", address)
+	f.WriteString(code)
 }
 
 //IfEnd for ending an if conditional
@@ -355,6 +366,7 @@ func IfEnd(f *os.File) {
 
 	code := fmt.Sprintf("%s:\n", address)
 	f.WriteString(code)
+
 	//If block has been executed jump to the end of the if statement
 	// ifEnd := fmt.Sprintf("ifEnd_%d", BlockCounter)
 	// code = fmt.Sprintf("jmp	%s\n", ifEnd)

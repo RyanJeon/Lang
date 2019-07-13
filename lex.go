@@ -81,7 +81,7 @@ func tokenizer(line string) []Token {
 			tokens = append(tokens, token)
 		} else if w == "=>" {
 			//Check if this was a function call or func declaration
-			if i > 0 && tokens[i-1].Type == "Variable" {
+			if i > 0 && tokens[i-1].Type == "Variable" && tokens[0].Type != "If" {
 				tokens[i-1].Type = "Function"
 			}
 
