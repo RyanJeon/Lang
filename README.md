@@ -62,6 +62,7 @@ $ ./example.rlang.out
 - Declare multiple variable types (String, array, boolean etc..)
 - Import
 - Ideally compiler can make executable instead of assembly. Ref golang syscall
+- If a variable is declared within a new block (ex. within conditional), it must be taken into consideration that the variable might not be pushed on to the stack, therefore should not affect the stack offsets and local variable map. 
 
 ### Some Problems
 - What about a conflict between variable and keywords? For example, someone who wants to write in Korean decides to declare a variable in English, does that person have to be aware of English keywords as well?:
