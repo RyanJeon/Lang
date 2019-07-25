@@ -21,7 +21,7 @@ var FunctionParamMap map[string]int
 //FunctionCallStack : Keeps track of function calls
 var FunctionCallStack CallStack
 
-//endStack helps determine what "}" will be ending. ex) conditional, function, loop
+//EndStack helps determine what "}" will be ending. ex) conditional, function, loop
 var EndStack StringStack
 
 //Edit
@@ -35,7 +35,12 @@ var IfEndStack StringStack
 //BlockCounter stores how many statement blocks there are. (forloop and if)
 var BlockCounter int
 
+//Stack index should be different each block so implement stack!
 var stackindex int
+
+//StackIndexStack will hold appropriate rbp offset for given block
+var StackIndexStack IntStack
+
 var paramCount int //Keeps track of how many parameters are in a function
 
 //BytesToInt : Convert int ascii value to int
@@ -155,8 +160,10 @@ func Declaration(tree *Tree, f *os.File, vartype string) {
 }
 
 func VariableDeclaration(tokens []Token, f *os.File) {
-	variableName := string(tokens[1].Value)
 
+	variableName := string(tokens[1].Value)
+	log.Print("Declaring Variable: ")
+	log.Println(variableName)
 	newTokenList := make([]Token, 0)
 	//Currently just in type so just do arithmetic
 	for i := 3; i < len(tokens); i++ {
@@ -222,6 +229,8 @@ func FunctionCall(functionCall Call, f *os.File) {
 	function := functionCall.Name
 	inputs := functionCall.Inputs
 
+	log.Println("Calling Function!")
+	log.Println(functionCall)
 	params := 0
 	for _, input := range inputs {
 		t := tree(TokensPostfix(input))
@@ -236,7 +245,6 @@ func FunctionCall(functionCall Call, f *os.File) {
 
 //AddFunctionCallToStack : adds function call to call stack
 func AddFunctionCallToStack(tokens []Token) Call {
-
 	callInputs := make([][]Token, 0)
 
 	i := 2
@@ -260,14 +268,63 @@ func AddFunctionCallToStack(tokens []Token) Call {
 		Name:   string(tokens[0].Value),
 		Inputs: callInputs,
 	}
-
 	FunctionCallStack = FunctionCallStack.Push(call)
 	return call
 }
 
+//FunctionReturn is used to return value for function
 func FunctionReturn(tokens []Token, f *os.File) {
-	t := tree(TokensPostfix(tokens[1:]))
+	log.Println("Returning Function")
+	log.Println(tokens)
+
+	newTokenList := make([]Token, 0)
+	//Currently just in type so just do arithmetic
+	for i := 0; i < len(tokens); i++ {
+		//If function call seen
+		if tokens[i].Type == "Function" {
+			j := i
+			for j < len(tokens) && string(tokens[j].Value) != ")" {
+				j++
+			}
+			//Make a function call
+			AddFunctionCallToStack(tokens[i : j+1])
+
+			tokens[i].Type = "FunctionCall"
+			newTokenList = append(newTokenList, tokens[i])
+			i = j
+		} else {
+			newTokenList = append(newTokenList, tokens[i])
+		}
+	}
+	t := tree(TokensPostfix(newTokenList[1:]))
 	asm64(&t, f)
+	log.Println("Returning Function End")
+	f.WriteString("movq	%rbp, %rsp\n")
+	f.WriteString("popq	%rbp\n")
+
+	//move rsp to point to the return address. (-paramCount) is there to
+	//take account of the fact that variables passed in as parameters are
+	//above ret address in the stack, and local variables are right below
+	//the return address. However, both types of variables are in LocalVariable
+	//map meaning, len(LocalVariable) will count both types of variables!
+	//
+	// [         ]
+	// [  param  ]
+	// [         ]
+	// [ ret ad  ]
+	// [         ]
+	// [local var]
+	// [         ]  <== rsp
+
+	//Note : how do we deal with resetting rsp when there is variable declaration
+	//that is not hit?
+	code := fmt.Sprintf("addq	$%d, %%rsp\n", (len(LocalVariable)-paramCount)*8)
+	f.WriteString(code)
+	f.WriteString("retq\n")
+
+	// LocalVariable = make(map[string]int)
+	// stackindex = 8
+	// paramCount = 0 //reset param count for new function!
 }
 
 func isCondOp(token Token) bool {
@@ -333,6 +390,9 @@ func conditionalExpGen(lhs []Token, rhs []Token, op Token, f *os.File) {
 	case "==":
 		code := fmt.Sprintf("jne	%s\n", jump)
 		f.WriteString(code)
+	case "!=":
+		code := fmt.Sprintf("je	%s\n", jump)
+		f.WriteString(code)
 	}
 
 	//Push the jump address to the if stack
@@ -377,4 +437,37 @@ func IfEnd(f *os.File) {
 	// f.WriteString(code)
 	// IfEndStack = IfEndStack.Push(ifEnd)
 	// BlockCounter++
+}
+
+//RedefineVariable to redefine already declared variable. Note: Could be used for declaring too
+func RedefineVariable(tokens []Token, f *os.File) {
+	variableName := string(tokens[0].Value)
+	newTokenList := make([]Token, 0)
+	//Currently just in type so just do arithmetic
+	for i := 2; i < len(tokens); i++ {
+		//If function call seen
+		if tokens[i].Type == "Function" {
+			j := i
+			for j < len(tokens) && string(tokens[j].Value) != ")" {
+				j++
+			}
+			//Make a function call
+			AddFunctionCallToStack(tokens[i : j+1])
+
+			tokens[i].Type = "FunctionCall"
+			newTokenList = append(newTokenList, tokens[i])
+			i = j
+		} else {
+			newTokenList = append(newTokenList, tokens[i])
+		}
+	}
+
+	t := tree(TokensPostfix(newTokenList))
+	Arithmetic(&t, f)
+
+	offset := LocalVariable[variableName]
+
+	index := (len(LocalVariable)+1)*8 - offset
+	code := fmt.Sprintf("movq	%%rax, %d(%%rbp)\n", index)
+	f.WriteString(code)
 }

@@ -43,6 +43,7 @@ func GrammarInit() {
 
 	addToClassTree(classTreeRoot, []string{"}"}, "EndOf")
 
+	addToClassTree(classTreeRoot, []string{"Variable", "Assignment"}, "Redefinition")
 }
 
 func checkValue(t Token) bool {

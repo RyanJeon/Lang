@@ -1,10 +1,11 @@
-Int foo => Int a , Int b
-    Int c = b + a
-    return c
+Int fib => Int a , Int b , Int ctr , Int limit
+    if ctr == 20 =>
+        return 2
+    }
+    Int c = a + b
+    print ( c )
+    return fib ( b , c , ctr + 1 , limit )
 }
 Int execute =>
-    Int a = 2
-    Int b = 10
-    Int c = foo ( a , b )
-    print ( c )
+    Int a = fib ( 1 , 1 , 0 , 5 )
 }

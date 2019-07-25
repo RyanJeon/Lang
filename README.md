@@ -20,6 +20,22 @@ End
 ```
 
 
+#### .rlang Fibonacci Example
+```
+Int fib => Int a , Int b , Int ctr , Int limit
+    if ctr == 20 =>
+        return 2
+    }
+    Int c = a + b
+    print ( c )
+    return fib ( b , c , ctr + 1 , limit )
+}
+Int execute =>
+    Int a = fib ( 1 , 1 , 0 , 5 )
+}
+```
+
+
 #### Compiling / Running .rlang file
 ##### Install GCC to compile assembly to executable!
 ```sh

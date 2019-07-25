@@ -14,6 +14,9 @@ type CallStack []Call
 //StringStack : Stack for strings ... lol
 type StringStack []string
 
+//IntStack : Stack for integers
+type IntStack []int
+
 //Queue implementation
 type Queue []Token
 
@@ -47,6 +50,37 @@ func (s Stack) Top() Token {
 func (s Stack) isEmpty() bool {
 	return len(s) == 0
 }
+
+/////// Int Stack ///////
+
+//Push : pushes token to stack
+func (s IntStack) Push(v int) IntStack {
+	return append(s, v)
+}
+
+//Pop : returns and pop the top of token stack
+func (s IntStack) Pop() (IntStack, int) {
+	l := len(s)
+	if l == 0 {
+		log.Fatal("Stack is Empty")
+	}
+	return s[:l-1], s[l-1]
+}
+
+//Top : returns top of the stack
+func (s IntStack) Top() int {
+	l := len(s)
+	if l == 0 {
+		log.Fatal("Stack is Empty")
+	}
+	return s[l-1]
+}
+
+func (s IntStack) isEmpty() bool {
+	return len(s) == 0
+}
+
+///// Call Stack //////
 
 //Push : pushes token to stack
 func (s CallStack) Push(v Call) CallStack {

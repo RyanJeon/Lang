@@ -11,3 +11,6 @@ compile:
 
 build:
 	$(GOBUILD) -o rlang assembler.go dsutil.go interpret.go lang.go parser.go lex.go asmutil.go grammar.go
+
+test:
+	$(GCC) test.asm -o test.out -e execute
