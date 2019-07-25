@@ -115,28 +115,9 @@ func CodeGen(class string, tokens []Token, f *os.File, scanner *bufio.Scanner) {
 		if endType == "IfStatement" {
 			IfEnd(f)
 		} else if endType == "FunctionDeclaration" {
-			f.WriteString("movq	%rbp, %rsp\n")
-			f.WriteString("popq	%rbp\n")
 
-			//move rsp to point to the return address. (-paramCount) is there to
-			//take account of the fact that variables passed in as parameters are
-			//above ret address in the stack, and local variables are right below
-			//the return address. However, both types of variables are in LocalVariable
-			//map meaning, len(LocalVariable) will count both types of variables!
-			//
-			// [         ]
-			// [  param  ]
-			// [         ]
-			// [ ret ad  ]
-			// [         ]
-			// [local var]
-			// [         ]  <== rsp
-
-			//Note : how do we deal with resetting rsp when there is variable declaration
-			//that is not hit?
-			code := fmt.Sprintf("addq	$%d, %%rsp\n", (len(LocalVariable)-paramCount)*8)
-			f.WriteString(code)
-			f.WriteString("retq\n")
+			//Pop local variable, restore rsp to return address
+			PopLocalVariables(f)
 
 			LocalVariable = make(map[string]int)
 			FunctionCallStack = make([]Call, 0)

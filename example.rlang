@@ -1,6 +1,7 @@
 Int fib => Int a , Int b , Int ctr , Int limit
+    Int d = 2
     if ctr == 20 =>
-        return 2
+        return d + 2
     }
     Int c = a + b
     print ( c )
@@ -8,4 +9,5 @@ Int fib => Int a , Int b , Int ctr , Int limit
 }
 Int execute =>
     Int a = fib ( 1 , 1 , 0 , 5 )
+    print ( a )
 }
