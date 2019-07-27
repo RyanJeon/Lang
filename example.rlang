@@ -1,6 +1,6 @@
 Int fib => Int a , Int b , Int ctr , Int limit
     Int d = 2
-    if ctr == 20 =>
+    if ctr == 30 =>
         return d + 2
     }
     Int c = a + b

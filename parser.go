@@ -86,7 +86,6 @@ func TokensPostfix(tokens []Token) []Token {
 		postfix = append(postfix, term)
 	}
 
-	log.Println(postfix)
 	return postfix
 }
 

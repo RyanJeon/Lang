@@ -68,3 +68,9 @@ $ ./example.rlang.out
 - What about a conflict between variable and keywords? For example, someone who wants to write in Korean decides to declare a variable in English, does that person have to be aware of English keywords as well?:
     - In the future, the user will specify the code language at compile time
     to avoid such conflict.
+
+### Work Flow Diagram
+!["Work Flow"](https://i.imgur.com/xfN1TsE.png)
+- Currently code generation divides into two stages: 
+    - Statement class dependent preprocessing: Depends on the statement type, the compiler will generate appropriate assembly for a givent statement
+    - Convert left over tokens to RPN, and generate AST for final code generation. Currently this stage is to support arithmetic operation. This has to be more integrated in the compilation stage.

@@ -69,8 +69,6 @@ func Arithmetic(tree *Tree, f *os.File) {
 			}
 
 			index := (len(LocalVariable)+1)*8 - offset
-			log.Println(len(LocalVariable) + 1)
-			log.Println((len(LocalVariable) + 1) * 8)
 			code := fmt.Sprintf("movq	%d(%%rbp), %%rax\n", index)
 			f.WriteString(code)
 		} else if (*tree).Type == "FunctionCall" {
@@ -159,11 +157,10 @@ func Declaration(tree *Tree, f *os.File, vartype string) {
 	}
 }
 
+//VariableDeclaration : a helper for declaring variable
 func VariableDeclaration(tokens []Token, f *os.File) {
 
 	variableName := string(tokens[1].Value)
-	log.Print("Declaring Variable: ")
-	log.Println(variableName)
 	newTokenList := make([]Token, 0)
 	//Currently just in type so just do arithmetic
 	for i := 3; i < len(tokens); i++ {
@@ -184,8 +181,7 @@ func VariableDeclaration(tokens []Token, f *os.File) {
 		}
 	}
 
-	t := tree(TokensPostfix(newTokenList))
-	Arithmetic(&t, f)
+	TokenProcess(newTokenList, f)
 
 	LocalVariable[variableName] = stackindex
 	stackindex = stackindex + 8
@@ -220,7 +216,6 @@ func FunctionDeclaration(tokens []Token, f *os.File) {
 	}
 
 	//Register # of parameters for the function
-	log.Println(LocalVariable)
 	FunctionParamMap[string(tokens[1].Value)] = paramCount
 }
 
@@ -229,12 +224,11 @@ func FunctionCall(functionCall Call, f *os.File) {
 	function := functionCall.Name
 	inputs := functionCall.Inputs
 
-	log.Println("Calling Function!")
-	log.Println(functionCall)
 	params := 0
 	for _, input := range inputs {
-		t := tree(TokensPostfix(input))
-		asm64(&t, f)
+		TokenProcess(input, f)
+
+		//Push the function argument to rax after processing current arg
 		f.WriteString("pushq	%rax\n")
 		params++
 	}
@@ -274,8 +268,6 @@ func AddFunctionCallToStack(tokens []Token) Call {
 
 //FunctionReturn is used to return value for function
 func FunctionReturn(tokens []Token, f *os.File) {
-	log.Println("Returning Function")
-	log.Println(tokens)
 
 	newTokenList := make([]Token, 0)
 	//Currently just in type so just do arithmetic
@@ -296,16 +288,11 @@ func FunctionReturn(tokens []Token, f *os.File) {
 			newTokenList = append(newTokenList, tokens[i])
 		}
 	}
-	t := tree(TokensPostfix(newTokenList[1:]))
-	asm64(&t, f)
-	log.Println("Returning Function End")
+
+	TokenProcess(newTokenList[1:], f)
 
 	//Pop local variable, restore rsp to return address
 	PopLocalVariables(f)
-
-	// LocalVariable = make(map[string]int)
-	// stackindex = 8
-	// paramCount = 0 //reset param count for new function!
 }
 
 func isCondOp(token Token) bool {
@@ -345,9 +332,6 @@ func conditionalHelper(tokens []Token, f *os.File) {
 }
 
 func conditionalExpGen(lhs []Token, rhs []Token, op Token, f *os.File) {
-	log.Println(lhs)
-	log.Println(rhs)
-	log.Println(op)
 
 	TokenProcess(lhs, f)
 	f.WriteString("movq	%rax, %rbx\n")
@@ -388,7 +372,6 @@ func IfStatement(tokens []Token, f *os.File) {
 	} else {
 		conditional := tokens[1 : len(tokens)-1]
 		conditionalHelper(conditional, f)
-		log.Println(conditional)
 	}
 
 	//Increment block counter to avoid conflict
@@ -443,8 +426,7 @@ func RedefineVariable(tokens []Token, f *os.File) {
 		}
 	}
 
-	t := tree(TokensPostfix(newTokenList))
-	Arithmetic(&t, f)
+	TokenProcess(newTokenList, f)
 
 	offset := LocalVariable[variableName]
 

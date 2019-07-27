@@ -6,15 +6,17 @@ import (
 	"os"
 )
 
+//KEEP ALL THE RESULTS TO RAX!
+//For arithmetic for now
+
 //TokenProcess general token prcessing function
 func TokenProcess(tokens []Token, f *os.File) {
-	t := tree(TokensPostfix(tokens))
-	asm64(&t, f)
-}
 
-func asm64(tree *Tree, f *os.File) {
-	//Set up assembly
-	treeAssemble(tree, f)
+	//Take tokens, covert them into RPN, and produce AST
+	t := tree(TokensPostfix(tokens))
+
+	//Get the syntax tree and output assembly
+	treeAssemble(&t, f)
 }
 
 func treeAssemble(tree *Tree, f *os.File) {
@@ -85,8 +87,7 @@ func ScanAndGen(scanner *bufio.Scanner, f *os.File) {
 func CodeGen(class string, tokens []Token, f *os.File, scanner *bufio.Scanner) {
 	switch class {
 	case "Test":
-		t := tree(TokensPostfix(tokens))
-		asm64(&t, f)
+		TokenProcess(tokens, f)
 		break
 	case "VariableDeclaration":
 		VariableDeclaration(tokens, f)
@@ -100,8 +101,7 @@ func CodeGen(class string, tokens []Token, f *os.File, scanner *bufio.Scanner) {
 	case "FunctionCall":
 		//Print exception need fix later
 		if string(tokens[0].Value) == "print" {
-			t := tree(TokensPostfix(tokens))
-			asm64(&t, f)
+			TokenProcess(tokens, f)
 		} else {
 			FunctionCall(AddFunctionCallToStack(tokens), f)
 			FunctionCallStack, _ = FunctionCallStack.Pop()
