@@ -38,8 +38,11 @@ var BlockCounter int
 //Stack index should be different each block so implement stack!
 var stackindex int
 
-//StackIndexStack will hold appropriate rbp offset for given block
-var StackIndexStack IntStack
+//LocalVariableCountStack is a stack that holds number of local variables in a block
+var LocalVariableCountStack IntStack
+
+//VariableStack holds declared variables to assist deleting local variables in blocks
+var VariableStack StringStack
 
 var paramCount int //Keeps track of how many parameters are in a function
 
@@ -183,6 +186,20 @@ func VariableDeclaration(tokens []Token, f *os.File) {
 
 	TokenProcess(newTokenList, f)
 
+	//Increment variable counts
+	if LocalVariableCountStack.isEmpty() {
+		LocalVariableCountStack = LocalVariableCountStack.Push(1)
+	} else {
+		var count int
+		//Increment number of local variables in current block
+		LocalVariableCountStack, count = LocalVariableCountStack.Pop()
+		LocalVariableCountStack = LocalVariableCountStack.Push(count + 1)
+	}
+
+	log.Println(LocalVariableCountStack)
+	//Push declared variable onto the variablestack
+	VariableStack = VariableStack.Push(variableName)
+
 	LocalVariable[variableName] = stackindex
 	stackindex = stackindex + 8
 
@@ -215,6 +232,7 @@ func FunctionDeclaration(tokens []Token, f *os.File) {
 		i = i + 2
 	}
 
+	blockInit()
 	//Register # of parameters for the function
 	FunctionParamMap[string(tokens[1].Value)] = paramCount
 }
@@ -292,7 +310,7 @@ func FunctionReturn(tokens []Token, f *os.File) {
 	TokenProcess(newTokenList[1:], f)
 
 	//Pop local variable, restore rsp to return address
-	PopLocalVariables(f)
+	FunctionEndRspReset()
 }
 
 func isCondOp(token Token) bool {
@@ -374,6 +392,8 @@ func IfStatement(tokens []Token, f *os.File) {
 		conditionalHelper(conditional, f)
 	}
 
+	blockInit()
+
 	//Increment block counter to avoid conflict
 	BlockCounter++
 }
@@ -433,4 +453,33 @@ func RedefineVariable(tokens []Token, f *os.File) {
 	index := (len(LocalVariable)+1)*8 - offset
 	code := fmt.Sprintf("movq	%%rax, %d(%%rbp)\n", index)
 	f.WriteString(code)
+}
+
+//Initialize local variable count for current block
+func blockInit() {
+	LocalVariableCountStack = LocalVariableCountStack.Push(0)
+}
+
+//When block ends, all the local variables declared inside needs to be deleted
+func BlockEnd() {
+	var count int
+	LocalVariableCountStack, count = LocalVariableCountStack.Pop()
+
+	//Pop count amount of local variables
+	PopLocalVariables(count)
+	//If there was at least one local variable at the current block
+	if count != 0 {
+		log.Println(LocalVariable)
+		for count != 0 {
+			var variable string
+			VariableStack, variable = VariableStack.Pop()
+			stackindex = stackindex - 8
+
+			//Delete current variable from the map to make sure the variable cannot be referenced again
+			delete(LocalVariable, variable)
+			count--
+		}
+
+		log.Println(LocalVariable)
+	}
 }

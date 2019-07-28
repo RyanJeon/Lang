@@ -113,11 +113,12 @@ func CodeGen(class string, tokens []Token, f *os.File, scanner *bufio.Scanner) {
 		EndStack, endType = EndStack.Pop()
 
 		if endType == "IfStatement" {
+			BlockEnd()
 			IfEnd(f)
 		} else if endType == "FunctionDeclaration" {
 
 			//Pop local variable, restore rsp to return address
-			PopLocalVariables(f)
+			FunctionEndRspReset()
 
 			LocalVariable = make(map[string]int)
 			FunctionCallStack = make([]Call, 0)

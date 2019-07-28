@@ -17,8 +17,18 @@ const (
 
 //ToDo XOR used resistors to clean up just to be sure
 
+//ASMInit : initialize assembly file
+func ASMInit(f *os.File) {
+	f.Write([]byte(".data\n"))
+	f.Write([]byte("print: .asciz \"\" \n"))
+	f.Write([]byte(".globl execute\n")) //make main visible to linker
+	f.Write([]byte(".text\n"))
+	intToHex(f)
+	printAsm(f)
+}
+
 //IntToHex : writes integer to decimal equivalent of ascii in current file takes rax as input, and outputs to rcx
-func IntToHex(f *os.File) {
+func intToHex(f *os.File) {
 	//flip the digits before conversion
 	f.WriteString("inttostring:\n")
 	//Initialize variables, r9 = 10 (digit iterator), cl = 0, (8*n) bit shift
@@ -72,7 +82,7 @@ func flipDigits(f *os.File) {
 	f.WriteString("movq	%rcx, %rax\n") //move the result to rax
 }
 
-func PrintAsm(f *os.File) {
+func printAsm(f *os.File) {
 	f.WriteString("printout:\n")
 	f.WriteString("movq	$0x2000004, %rax\n")
 	f.WriteString("movq	$1, %rdi\n")
@@ -83,10 +93,10 @@ func PrintAsm(f *os.File) {
 	f.WriteString("retq\n")
 }
 
-//PopLocalVariables : pop local varibles through resetting rsp based on length of local variable map
-func PopLocalVariables(f *os.File) {
-	f.WriteString("movq	%rbp, %rsp\n")
-	f.WriteString("popq	%rbp\n")
+//FunctionEndRspReset : pop local varibles through resetting rsp based on length of local variable map
+func FunctionEndRspReset() {
+	File.WriteString("movq	%rbp, %rsp\n")
+	File.WriteString("popq	%rbp\n")
 
 	//move rsp to point to the return address. (-paramCount) is there to
 	//take account of the fact that variables passed in as parameters are
@@ -105,6 +115,21 @@ func PopLocalVariables(f *os.File) {
 	//Note : how do we deal with resetting rsp when there is variable declaration
 	//that is not hit?
 	code := fmt.Sprintf("addq	$%d, %%rsp\n", (len(LocalVariable)-paramCount)*8)
-	f.WriteString(code)
-	f.WriteString("retq\n")
+	File.WriteString(code)
+	File.WriteString("retq\n")
+}
+
+//PopLocalVariables : Given number of variables pops that amount of variables
+func PopLocalVariables(count int) {
+	File.WriteString("movq	%rbp, %rsp\n")
+	File.WriteString("popq	%rbp\n") //restore rbp
+
+	for i := 0; i < count; i++ {
+		//pop remaining local variable
+		File.WriteString("popq	%rcx\n")
+	}
+
+	//Whenever you update number of variables, remember to reset the rbp address to top of local variables!
+	File.WriteString("pushq	%rbp\n")
+	File.WriteString("movq	%rsp, %rbp\n")
 }

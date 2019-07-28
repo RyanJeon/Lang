@@ -6,6 +6,9 @@ import (
 	"os"
 )
 
+//File created to hold assembly
+var File *os.File
+
 func main() {
 	// example := "print ( ( 20 + 30 ) * 10 + ( 2 - 65 * 10 ) * 32 )"
 	args := os.Args
@@ -24,12 +27,8 @@ func main() {
 	}
 	defer file.Close()
 	f, _ := os.Create("test.asm")
-	f.Write([]byte(".data\n"))
-	f.Write([]byte("print: .asciz \"\" \n"))
-	f.Write([]byte(".globl execute\n")) //make main visible to linker
-	f.Write([]byte(".text\n"))
-	IntToHex(f)
-	PrintAsm(f)
+	File = f
+	ASMInit(f)
 
 	scanner := bufio.NewScanner(file)
 	ScanAndGen(scanner, f)

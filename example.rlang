@@ -1,13 +1,9 @@
-Int fib => Int a , Int b , Int ctr , Int limit
-    Int d = 2
-    if ctr == 30 =>
-        return d + 2
-    }
-    Int c = a + b
-    print ( c )
-    return fib ( b , c , ctr + 1 , limit )
-}
 Int execute =>
-    Int a = fib ( 1 , 1 , 0 , 5 )
-    print ( a )
+    Int a = 1
+    Int c = 69
+    if a == 1 =>
+        Int b = 4
+        print ( b )
+    }
+    print ( c )
 }
