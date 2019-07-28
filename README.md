@@ -74,4 +74,4 @@ $ ./example.rlang.out
 !["Work Flow"](https://i.imgur.com/xfN1TsE.png)
 - Currently code generation divides into two stages: 
     - Statement class dependent preprocessing: Depends on the statement type, the compiler will generate appropriate assembly for a givent statement
-    - Convert left over tokens to RPN, and generate AST for final code generation. Currently this stage is to support arithmetic operation. This has to be more integrated in the compilation stage.
+    - Convert leftover tokens to RPN, and generate AST for final code generation. Currently this stage is to support arithmetic operation. This has to be more integrated in the compilation stage.

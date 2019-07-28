@@ -59,7 +59,7 @@ func BytesToInt(bytes []byte) int {
 
 //NOTE: Fix Negatives
 //Arithmetic : given Arithmetic tree, calculates integer value
-func Arithmetic(tree *Tree, f *os.File) {
+func Arithmetic(tree *Tree) {
 	val := (*tree).Value[0]
 	if (*tree).Type != "Operator" {
 		if (*tree).Type == "Variable" {
@@ -73,95 +73,95 @@ func Arithmetic(tree *Tree, f *os.File) {
 
 			index := (len(LocalVariable)+1)*8 - offset
 			code := fmt.Sprintf("movq	%d(%%rbp), %%rax\n", index)
-			f.WriteString(code)
+			ASMWrite(code)
 		} else if (*tree).Type == "FunctionCall" {
 			var call Call
 			FunctionCallStack, call = FunctionCallStack.Poll()
-			FunctionCall(call, f)
+			FunctionCall(call)
 		} else {
 			s := fmt.Sprintf("movq	$%s, %%rax\n", string((*tree).Value))
-			f.WriteString(s)
+			ASMWrite(s)
 		}
 		//Plus
 	} else if val == 43 {
-		Arithmetic(tree.Left, f)
-		f.WriteString("pushq	%rax\n")
-		Arithmetic(tree.Right, f)
-		f.WriteString("popq	%rcx\n")
-		f.WriteString("addq	%rcx, %rax\n")
+		Arithmetic(tree.Left)
+		ASMWrite("pushq	%rax\n")
+		Arithmetic(tree.Right)
+		ASMWrite("popq	%rcx\n")
+		ASMWrite("addq	%rcx, %rax\n")
 		//Minus
 	} else if val == 45 {
-		Arithmetic(tree.Left, f)
-		f.WriteString("pushq	%rax\n")
-		Arithmetic(tree.Right, f)
-		f.WriteString("popq	%rcx\n")
-		f.WriteString("subq	%rax, %rcx\n")
-		f.WriteString("movq	%rcx, %rax\n")
+		Arithmetic(tree.Left)
+		ASMWrite("pushq	%rax\n")
+		Arithmetic(tree.Right)
+		ASMWrite("popq	%rcx\n")
+		ASMWrite("subq	%rax, %rcx\n")
+		ASMWrite("movq	%rcx, %rax\n")
 		//Mult
 	} else if val == 42 {
-		Arithmetic(tree.Left, f)
-		f.WriteString("pushq	%rax\n")
-		Arithmetic(tree.Right, f)
-		f.WriteString("popq	%rcx\n")
-		f.WriteString("mulq	%rcx\n")
+		Arithmetic(tree.Left)
+		ASMWrite("pushq	%rax\n")
+		Arithmetic(tree.Right)
+		ASMWrite("popq	%rcx\n")
+		ASMWrite("mulq	%rcx\n")
 		//Div
 	} else if val == 47 {
-		Arithmetic(tree.Left, f)
-		f.WriteString("pushq	%rax\n")
-		Arithmetic(tree.Right, f)
-		f.WriteString("movq	%rax, %rcx\n")
-		f.WriteString("popq	%rax\n")
-		f.WriteString("xor		%rdx, %rdx\n")
-		f.WriteString("divq	%rcx\n")
+		Arithmetic(tree.Left)
+		ASMWrite("pushq	%rax\n")
+		Arithmetic(tree.Right)
+		ASMWrite("movq	%rax, %rcx\n")
+		ASMWrite("popq	%rax\n")
+		ASMWrite("xor		%rdx, %rdx\n")
+		ASMWrite("divq	%rcx\n")
 	} else {
 
 	}
 }
 
 //Declaration : traverse tree for variable declaration
-func Declaration(tree *Tree, f *os.File, vartype string) {
+func Declaration(tree *Tree, vartype string) {
 	if tree == nil {
 		return
 	}
 	termtype := (*tree).Type
 	switch termtype {
 	case "Declaration":
-		Declaration(tree.Right, f, vartype)
+		Declaration(tree.Right, vartype)
 		break
 	//Should check if it's function call or declaration
 	case "Function":
 		code := fmt.Sprintf("%s:\n", string((*tree).Value))
-		f.WriteString(code)
-		Declaration(tree.Right, f, vartype)
+		ASMWrite(code)
+		Declaration(tree.Right, vartype)
 		break
 	case "Assignment":
-		Declaration(tree.Left, f, vartype)
-		Declaration(tree.Right, f, vartype)
+		Declaration(tree.Left, vartype)
+		Declaration(tree.Right, vartype)
 
-		f.WriteString("pushq	%rbp\n")
-		f.WriteString("movq	%rsp, %rbp\n")
+		ASMWrite("pushq	%rbp\n")
+		ASMWrite("movq	%rsp, %rbp\n")
 		break
 	case "Variable":
 		LocalVariable[string((*tree).Value)] = stackindex
 		stackindex = stackindex + 8
 		break
 	case "Int":
-		Arithmetic(tree, f)
+		Arithmetic(tree)
 		//move rbp to top of the stack again
-		f.WriteString("popq	%rbp\n")
-		f.WriteString("pushq	%rax\n")
+		ASMWrite("popq	%rbp\n")
+		ASMWrite("pushq	%rax\n")
 		break
 	case "Operator":
-		Arithmetic(tree, f)
+		Arithmetic(tree)
 		//move rbp to top of the stack again
-		f.WriteString("popq	%rbp\n")
-		f.WriteString("pushq	%rax\n")
+		ASMWrite("popq	%rbp\n")
+		ASMWrite("pushq	%rax\n")
 		break
 	}
 }
 
 //VariableDeclaration : a helper for declaring variable
-func VariableDeclaration(tokens []Token, f *os.File) {
+func VariableDeclaration(tokens []Token) {
 
 	variableName := string(tokens[1].Value)
 	newTokenList := make([]Token, 0)
@@ -184,7 +184,7 @@ func VariableDeclaration(tokens []Token, f *os.File) {
 		}
 	}
 
-	TokenProcess(newTokenList, f)
+	TokenProcess(newTokenList)
 
 	//Increment variable counts
 	if LocalVariableCountStack.isEmpty() {
@@ -203,19 +203,19 @@ func VariableDeclaration(tokens []Token, f *os.File) {
 	LocalVariable[variableName] = stackindex
 	stackindex = stackindex + 8
 
-	f.WriteString("popq	%rbp\n")
-	f.WriteString("pushq	%rax\n")
+	ASMWrite("popq	%rbp\n")
+	ASMWrite("pushq	%rax\n")
 
-	f.WriteString("pushq	%rbp\n")
-	f.WriteString("movq	%rsp, %rbp\n")
+	ASMWrite("pushq	%rbp\n")
+	ASMWrite("movq	%rsp, %rbp\n")
 }
 
 //FunctionDeclaration : Writes assembly for function declaration statement
-func FunctionDeclaration(tokens []Token, f *os.File) {
+func FunctionDeclaration(tokens []Token) {
 	code := fmt.Sprintf("%s:\n", string(tokens[1].Value))
-	f.WriteString(code)
-	f.WriteString("pushq   %rbp\n")
-	f.WriteString("movq	%rsp, %rbp\n")
+	ASMWrite(code)
+	ASMWrite("pushq   %rbp\n")
+	ASMWrite("movq	%rsp, %rbp\n")
 	// Dec Func ( **variables** ) {
 	i := 3
 	for i < len(tokens) {
@@ -238,21 +238,21 @@ func FunctionDeclaration(tokens []Token, f *os.File) {
 }
 
 //FunctionCall : Provides assembly for functioncall statement
-func FunctionCall(functionCall Call, f *os.File) {
+func FunctionCall(functionCall Call) {
 	function := functionCall.Name
 	inputs := functionCall.Inputs
 
 	params := 0
 	for _, input := range inputs {
-		TokenProcess(input, f)
+		TokenProcess(input)
 
 		//Push the function argument to rax after processing current arg
-		f.WriteString("pushq	%rax\n")
+		ASMWrite("pushq	%rax\n")
 		params++
 	}
 
-	f.WriteString(fmt.Sprintf("callq	%s\n", function))
-	f.WriteString(fmt.Sprintf("addq	$%d, %%rsp\n", params*8))
+	ASMWrite(fmt.Sprintf("callq	%s\n", function))
+	ASMWrite(fmt.Sprintf("addq	$%d, %%rsp\n", params*8))
 }
 
 //AddFunctionCallToStack : adds function call to call stack
@@ -285,7 +285,7 @@ func AddFunctionCallToStack(tokens []Token) Call {
 }
 
 //FunctionReturn is used to return value for function
-func FunctionReturn(tokens []Token, f *os.File) {
+func FunctionReturn(tokens []Token) {
 
 	newTokenList := make([]Token, 0)
 	//Currently just in type so just do arithmetic
@@ -307,7 +307,7 @@ func FunctionReturn(tokens []Token, f *os.File) {
 		}
 	}
 
-	TokenProcess(newTokenList[1:], f)
+	TokenProcess(newTokenList[1:])
 
 	//Pop local variable, restore rsp to return address
 	FunctionEndRspReset()
@@ -319,7 +319,7 @@ func isCondOp(token Token) bool {
 }
 
 //takes conditional statement and generates assembly
-func conditionalHelper(tokens []Token, f *os.File) {
+func conditionalHelper(tokens []Token) {
 
 	//Left and right pointer to parse portion of conditional statement
 	left := 0
@@ -343,18 +343,18 @@ func conditionalHelper(tokens []Token, f *os.File) {
 			rhs := tokens[i+1 : right]
 			op := tokens[i]
 
-			conditionalExpGen(lhs, rhs, op, f)
+			conditionalExpGen(lhs, rhs, op)
 			left = right
 		}
 	}
 }
 
-func conditionalExpGen(lhs []Token, rhs []Token, op Token, f *os.File) {
+func conditionalExpGen(lhs []Token, rhs []Token, op Token) {
 
-	TokenProcess(lhs, f)
-	f.WriteString("movq	%rax, %rbx\n")
-	TokenProcess(rhs, f)
-	f.WriteString("cmpq	%rax, %rbx\n")
+	TokenProcess(lhs)
+	ASMWrite("movq	%rax, %rbx\n")
+	TokenProcess(rhs)
+	ASMWrite("cmpq	%rax, %rbx\n")
 
 	//If the condition in if statement is not met, it will jump to the "jump" block
 	jump := fmt.Sprintf("ifblock_%d", BlockCounter)
@@ -366,16 +366,16 @@ func conditionalExpGen(lhs []Token, rhs []Token, op Token, f *os.File) {
 	switch string(op.Value) {
 	case ">":
 		code := fmt.Sprintf("jle	%s\n", jump)
-		f.WriteString(code)
+		ASMWrite(code)
 	case "<":
 		code := fmt.Sprintf("jge	%s\n", jump)
-		f.WriteString(code)
+		ASMWrite(code)
 	case "==":
 		code := fmt.Sprintf("jne	%s\n", jump)
-		f.WriteString(code)
+		ASMWrite(code)
 	case "!=":
 		code := fmt.Sprintf("je	%s\n", jump)
-		f.WriteString(code)
+		ASMWrite(code)
 	}
 
 	//Push the jump address to the if stack
@@ -384,12 +384,12 @@ func conditionalExpGen(lhs []Token, rhs []Token, op Token, f *os.File) {
 }
 
 //IfStatement : When the keyword IF is detected
-func IfStatement(tokens []Token, f *os.File) {
+func IfStatement(tokens []Token) {
 	if string(tokens[len(tokens)-1].Value) != "=>" {
 		log.Fatal("Expected => in if statement")
 	} else {
 		conditional := tokens[1 : len(tokens)-1]
-		conditionalHelper(conditional, f)
+		conditionalHelper(conditional)
 	}
 
 	blockInit()
@@ -404,27 +404,27 @@ func ElseStatement(f *os.File) {
 	IfStack, address = IfStack.Pop()
 
 	code := fmt.Sprintf("%s:\n", address)
-	f.WriteString(code)
+	ASMWrite(code)
 }
 
 //IfEnd for ending an if conditional
-func IfEnd(f *os.File) {
+func IfEnd() {
 	var address string
 	IfStack, address = IfStack.Pop()
 
 	code := fmt.Sprintf("%s:\n", address)
-	f.WriteString(code)
+	ASMWrite(code)
 
 	//If block has been executed jump to the end of the if statement
 	// ifEnd := fmt.Sprintf("ifEnd_%d", BlockCounter)
 	// code = fmt.Sprintf("jmp	%s\n", ifEnd)
-	// f.WriteString(code)
+	// ASMWrite(code)
 	// IfEndStack = IfEndStack.Push(ifEnd)
 	// BlockCounter++
 }
 
 //RedefineVariable to redefine already declared variable. Note: Could be used for declaring too
-func RedefineVariable(tokens []Token, f *os.File) {
+func RedefineVariable(tokens []Token) {
 	variableName := string(tokens[0].Value)
 	newTokenList := make([]Token, 0)
 	//Currently just in type so just do arithmetic
@@ -446,13 +446,13 @@ func RedefineVariable(tokens []Token, f *os.File) {
 		}
 	}
 
-	TokenProcess(newTokenList, f)
+	TokenProcess(newTokenList)
 
 	offset := LocalVariable[variableName]
 
 	index := (len(LocalVariable)+1)*8 - offset
 	code := fmt.Sprintf("movq	%%rax, %d(%%rbp)\n", index)
-	f.WriteString(code)
+	ASMWrite(code)
 }
 
 //Initialize local variable count for current block

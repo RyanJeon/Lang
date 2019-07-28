@@ -3,52 +3,51 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"os"
 )
 
 //KEEP ALL THE RESULTS TO RAX!
 //For arithmetic for now
 
 //TokenProcess general token prcessing function
-func TokenProcess(tokens []Token, f *os.File) {
+func TokenProcess(tokens []Token) {
 
 	//Take tokens, covert them into RPN, and produce AST
 	t := tree(TokensPostfix(tokens))
 
 	//Get the syntax tree and output assembly
-	treeAssemble(&t, f)
+	treeAssemble(&t)
 }
 
-func treeAssemble(tree *Tree, f *os.File) {
+func treeAssemble(tree *Tree) {
 	switch (*tree).Type {
 	//Operator means produce integer value ex) + - * ... etc
 	case "Operator":
-		Arithmetic(tree, f)
+		Arithmetic(tree)
 		break
 	case "Int":
-		Arithmetic(tree, f)
+		Arithmetic(tree)
 		break
 	case "Variable":
 		//Should change to allow dif variable types
-		Arithmetic(tree, f)
+		Arithmetic(tree)
 		break
 	//Fix Later
 	case "FunctionCall":
 		//Should change to allow dif variable types
-		Arithmetic(tree, f)
+		Arithmetic(tree)
 		break
 	case "Declaration":
-		Declaration(tree, f, string((*tree).Value))
+		Declaration(tree, string((*tree).Value))
 		break
 	//This is function call
 	case "Function":
 		if string((*tree).Value) == "출력" || string((*tree).Value) == "print" {
-			treeAssemble(tree.Right, f)
-			f.WriteString("callq	inttostring\n")
-			f.WriteString("callq	printout\n")
+			treeAssemble(tree.Right)
+			ASMWrite("callq	inttostring\n")
+			ASMWrite("callq	printout\n")
 		} else {
 			code := fmt.Sprintf("callq	%s\n", string((*tree).Value))
-			f.WriteString(code)
+			ASMWrite(code)
 		}
 		break
 	//End of func but need to be scalable
@@ -56,22 +55,22 @@ func treeAssemble(tree *Tree, f *os.File) {
 		//If there was local variable
 		if stackindex > 8 {
 
-			f.WriteString("movq	%rbp, %rsp\n")
-			f.WriteString("popq	%rbp\n") //restore rbp
+			ASMWrite("movq	%rbp, %rsp\n")
+			ASMWrite("popq	%rbp\n") //restore rbp
 			for i := 0; i < (stackindex/8)-1; i++ {
 				//pop remaining local variable
-				f.WriteString("popq	%rcx\n")
+				ASMWrite("popq	%rcx\n")
 			}
 			//Reset local variable map
 			LocalVariable = make(map[string]int)
 			stackindex = 8
 		}
-		f.WriteString("retq\n")
+		ASMWrite("retq\n")
 	}
 }
 
 //ScanAndGen takes a scanner object and generates code given string input
-func ScanAndGen(scanner *bufio.Scanner, f *os.File) {
+func ScanAndGen(scanner *bufio.Scanner) {
 	for scanner.Scan() {
 		code := scanner.Text()
 		if len(code) == 0 {
@@ -79,31 +78,31 @@ func ScanAndGen(scanner *bufio.Scanner, f *os.File) {
 		}
 		tokenized := tokenizer(code)
 		class := ClassifyStatement(tokenized)
-		CodeGen(class, tokenized, f, scanner)
+		CodeGen(class, tokenized, scanner)
 	}
 }
 
 //CodeGen takes a statement classification and outputs corresponding assembly
-func CodeGen(class string, tokens []Token, f *os.File, scanner *bufio.Scanner) {
+func CodeGen(class string, tokens []Token, scanner *bufio.Scanner) {
 	switch class {
 	case "Test":
-		TokenProcess(tokens, f)
+		TokenProcess(tokens)
 		break
 	case "VariableDeclaration":
-		VariableDeclaration(tokens, f)
+		VariableDeclaration(tokens)
 		break
 	case "FunctionReturn":
-		FunctionReturn(tokens, f)
+		FunctionReturn(tokens)
 	case "FunctionDeclaration":
 		EndStack = EndStack.Push("FunctionDeclaration")
-		FunctionDeclaration(tokens, f)
+		FunctionDeclaration(tokens)
 		break
 	case "FunctionCall":
 		//Print exception need fix later
 		if string(tokens[0].Value) == "print" {
-			TokenProcess(tokens, f)
+			TokenProcess(tokens)
 		} else {
-			FunctionCall(AddFunctionCallToStack(tokens), f)
+			FunctionCall(AddFunctionCallToStack(tokens))
 			FunctionCallStack, _ = FunctionCallStack.Pop()
 		}
 		break
@@ -114,7 +113,7 @@ func CodeGen(class string, tokens []Token, f *os.File, scanner *bufio.Scanner) {
 
 		if endType == "IfStatement" {
 			BlockEnd()
-			IfEnd(f)
+			IfEnd()
 		} else if endType == "FunctionDeclaration" {
 
 			//Pop local variable, restore rsp to return address
@@ -129,8 +128,8 @@ func CodeGen(class string, tokens []Token, f *os.File, scanner *bufio.Scanner) {
 		break
 	case "IfStatement":
 		EndStack = EndStack.Push("IfStatement")
-		IfStatement(tokens, f)
+		IfStatement(tokens)
 	case "Redefinition":
-		RedefineVariable(tokens, f)
+		RedefineVariable(tokens)
 	}
 }

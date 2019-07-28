@@ -26,10 +26,10 @@ func main() {
 		log.Fatal(err)
 	}
 	defer file.Close()
-	f, _ := os.Create("test.asm")
-	File = f
-	ASMInit(f)
+
+	File, _ = os.Create("test.asm")
+	ASMInit()
 
 	scanner := bufio.NewScanner(file)
-	ScanAndGen(scanner, f)
+	ScanAndGen(scanner)
 }
