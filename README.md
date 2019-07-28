@@ -1,5 +1,6 @@
 # RyanLang
 
+!["rat"](https://cdn.securesyte.com/P1NAV9OWje-994/images/norway-rat.png)
 ##### Warning: RyanLang is in a very crude stage. Also I am also accepting a good name for this language. As the language is in a development stage, keywords will be added as the language becomes more useful!
 
 # Info
