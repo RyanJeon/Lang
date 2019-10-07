@@ -49,7 +49,7 @@ func isOperator(word string) bool {
 }
 
 func isDeclaration(word string) bool {
-	return word == "Int"
+	return word == "Int" || word == "String" || word == "Bool" 
 }
 
 func isAssignment(word string) bool {

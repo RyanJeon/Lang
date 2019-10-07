@@ -2,8 +2,10 @@ Int execute =>
     Int a = 1
     Int c = 69
     if a == 1 =>
-        Int b = 4
-        print ( b )
+        if c == 69 =>
+            Int b = 21
+            print ( b )
+        }
     }
     print ( a + 1 )
 }
