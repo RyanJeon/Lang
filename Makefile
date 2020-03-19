@@ -14,3 +14,6 @@ build:
 
 test:
 	$(GCC) test.asm -o test.out -e execute
+
+clean:
+	rm -rf *.out
